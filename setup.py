@@ -178,6 +178,12 @@ setup(
         "Programming Language :: Python :: 3",
     ],
     # Could also include keywords, download_url, project_urls, etc.
+    # CLI
+    entry_points={
+        "console_scripts": [
+            "squidle-download-3x3=squidle_downloader.download_3x3:main",
+        ],
+    },
     # Custom commands
     cmdclass={
         "test": PyTest,
