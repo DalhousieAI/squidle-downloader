@@ -90,6 +90,8 @@ def download_dataset_3x3(df, data_dir, verbose=1):
         maybe_tqdm = lambda x: x  # noqa: E731
 
     skipped_points = defaultdict(lambda: 0)
+    n_already_downloaded = 0
+    n_download = 0
 
     for i_url, (url, indices) in enumerate(maybe_tqdm(url2idx.items())):
 
@@ -114,7 +116,7 @@ def download_dataset_3x3(df, data_dir, verbose=1):
             ):
                 print(
                     "Warning:\n"
-                    "  For file {}\n"
+                    "  While handling image {}\n"
                     "  Point {}, {} is not a 3x3 grid center".format(
                         url, row["x"], row["y"]
                     )
@@ -138,7 +140,9 @@ def download_dataset_3x3(df, data_dir, verbose=1):
             with tempfile.NamedTemporaryFile() as f:
                 _, headers = urllib.request.urlretrieve(url.strip(), f.name)
                 img = PIL.Image.open(f.name)
+            n_download += 1
         elif verbose >= 3:
+            n_already_downloaded += 1
             print("    All output files already exist; skipping download")
 
         for i_todo, (row, rel_dest) in enumerate(todo):
@@ -159,13 +163,17 @@ def download_dataset_3x3(df, data_dir, verbose=1):
                 subimg.save(os.path.join(data_dir, destination))
             row = row.copy()
             row["path"] = destination
-            output_df.append(row)
+            output_df = output_df.append(row)
 
     if verbose >= 1:
         print(
             "Finished processing {} labels across {} images".format(
                 len(df) - len(skipped_points), len(url2idx)
             )
+        )
+        print(
+            "There were {} images already downloaded. The remaining {} images"
+            " were downloaded.".format(n_already_downloaded, n_download)
         )
         if len(skipped_points) > 0:
             print("Skipped {} labels which were off-grid.".format(len(skipped_points)))
