@@ -210,7 +210,7 @@ def download_from_csv(input_csv, output_csv, data_dir, verbose=1):
     output_df = download_dataset_3x3(df, data_dir=data_dir, verbose=verbose)
     if verbose >= 1:
         print("Saving output dataset to {}".format(output_csv))
-    output_df.to_csv(output_csv)
+    output_df.to_csv(output_csv, index=False)
     print("Total runtime: {}".format(datetime.timedelta(seconds=time.time() - t0)))
 
 
