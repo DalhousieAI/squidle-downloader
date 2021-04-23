@@ -72,7 +72,7 @@ def download_dataset_3x3(df, data_dir, verbose=1):
 
     Returns
     -------
-    Pandas.DataFrame
+    pandas.DataFrame
         Output dataset, like `df`, but with a ``"path"`` column containing the
         path to the output files.
     """
