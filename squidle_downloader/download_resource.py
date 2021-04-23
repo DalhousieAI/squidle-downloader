@@ -18,7 +18,7 @@ import tqdm
 from . import __meta__, utils
 
 
-def download_resource(resource, subdomain="", verbose=1):
+def download_resource(resource, subdomain="", max_pages=None, verbose=1):
     """
     Download the entirety of a resource from SQUIDLE to a DataFrame.
 
@@ -31,6 +31,8 @@ def download_resource(resource, subdomain="", verbose=1):
         Name of output file.
     subdomain : str, optional
         SQUIDLE subdomain to use, one of `""` or `"soi"`. Default is `""`.
+    max_pages : int or None, optional
+        Maximum number of pages to download.
     verbose : int, optional
         Verbosity level. Default is ``1``.
 
@@ -59,6 +61,15 @@ def download_resource(resource, subdomain="", verbose=1):
     if n_page <= 1:
         return df
 
+    if max_pages is not None and n_page > max_pages:
+        if verbose >= 1:
+            print(
+                "Only downloading first {} of {} pages of results".format(
+                    max_pages, n_page
+                )
+            )
+        n_page = max_pages
+
     if verbose >= 1:
         _range = functools.partial(tqdm.trange, initial=1, total=n_page)
     else:
@@ -74,7 +85,9 @@ def download_resource(resource, subdomain="", verbose=1):
     return df
 
 
-def download_resource_to_csv(resource, destination, subdomain="", verbose=1):
+def download_resource_to_csv(
+    resource, destination, subdomain="", max_pages=None, verbose=1
+):
     """
     Download the entirety of a resource from SQUIDLE to a CSV file.
 
@@ -87,6 +100,8 @@ def download_resource_to_csv(resource, destination, subdomain="", verbose=1):
         Name of output file.
     subdomain : str, optional
         SQUIDLE subdomain to use, one of `""` or `"soi"`. Default is `""`.
+    max_pages : int or None, optional
+        Maximum number of pages to download.
     verbose : int, optional
         Verbosity level. Default is ``1``.
 
@@ -102,7 +117,9 @@ def download_resource_to_csv(resource, destination, subdomain="", verbose=1):
                 destination,
             )
         )
-    df = download_resource(resource, subdomain=subdomain, verbose=verbose)
+    df = download_resource(
+        resource, subdomain=subdomain, max_pages=max_pages, verbose=verbose
+    )
     if verbose >= 1:
         print("Saving output dataset to {}".format(destination))
     os.makedirs(os.path.dirname(destination), exist_ok=True)
@@ -165,6 +182,17 @@ def get_parser():
         type=str,
         default="",
         help='SQUIDLE subdomain access (e.g. "soi").',
+    )
+    parser.add_argument(
+        "--pages",
+        dest="max_pages",
+        metavar="N",
+        type=int,
+        default=None,
+        help=(
+            "Maximum number of pages to download. By default, all pages"
+            " are downloaded."
+        ),
     )
     parser.add_argument(
         "--verbose",
