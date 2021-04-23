@@ -47,5 +47,25 @@ def clean_df(df, inplace=True):
     """
     if not inplace:
         df = df.copy()
-    df["media_path"] = df["media_path"].str.strip()
+    if "media_path" in df.columns:
+        df["media_path"] = df["media_path"].str.strip()
     return df
+
+
+def build_base_url(subdomain):
+    """
+    Construct SQUIDLE base url, with subdomain included if necessary.
+
+    Parameters
+    ----------
+    subdomain : str
+        SQUIDLE subdomain to use, one of `""` or `"soi"`.
+
+    Returns
+    -------
+    url : str
+        SQUIDLE url with subdomain included.
+    """
+    if subdomain:
+        subdomain += "."
+    return "https://{}squidle.org".format(subdomain)

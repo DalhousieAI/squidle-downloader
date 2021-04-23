@@ -182,6 +182,7 @@ setup(
     entry_points={
         "console_scripts": [
             "squidle-download-3x3=squidle_downloader.download_3x3:main",
+            "squidle-download-resource=squidle_downloader.download_resource:main",
         ],
     },
     # Custom commands
