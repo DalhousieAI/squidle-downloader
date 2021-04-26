@@ -347,7 +347,8 @@ def cached_download_paginated(
         stacked_df = stacked_df.append(df, ignore_index=True)
 
     # Limit to only the pages we were asked to download
-    n_page = min(n_page, max_pages)
+    if max_pages is not None:
+        n_page = min(n_page, max_pages)
 
     if page >= n_page:
         # The last page loaded is the total number of pages in the database,
