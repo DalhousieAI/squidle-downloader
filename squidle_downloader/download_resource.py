@@ -49,7 +49,7 @@ def download_resource(resource, subdomain="", max_pages=None, verbose=1):
     url = base_url + "/api/" + resource
     params = {
         "q": json.dumps({"order_by": [{"field": "id", "direction": "asc"}]}),
-        "results_per_page": 10000,
+        "results_per_page": 10_000,
     }
 
     result = requests.get(url, params=params).json()
