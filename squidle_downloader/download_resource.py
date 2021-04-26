@@ -106,7 +106,8 @@ def download_resource_to_csv(
 
     Returns
     -------
-    None
+    pandas.DataFrame
+        Output dataset.
     """
     t0 = time.time()
     if verbose >= 1:
@@ -131,6 +132,7 @@ def download_resource_to_csv(
                 datetime.timedelta(seconds=time.time() - t0),
             )
         )
+    return df
 
 
 def get_parser():
