@@ -112,7 +112,7 @@ def download_resource_to_csv(
     t0 = time.time()
     if verbose >= 1:
         print(
-            'Will downloading "{}" data to CSV file {}'.format(
+            'Will download "{}" data to CSV file {}'.format(
                 resource,
                 destination,
             )
