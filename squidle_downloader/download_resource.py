@@ -39,8 +39,7 @@ def download_resource(resource, subdomain="", max_pages=None, verbose=1):
     Returns
     -------
     pandas.DataFrame
-        Output dataset, like `df`, but with a ``"path"`` column containing the
-        path to the output files.
+        Output dataset.
     """
     base_url = utils.build_base_url(subdomain)
 
