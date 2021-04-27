@@ -44,7 +44,9 @@ def download_resource(resource, subdomain="", max_pages=None, verbose=1):
     base_url = utils.build_base_url(subdomain)
 
     if verbose >= 1:
-        print('Downloading all "{}" data from {}'.format(resource, base_url))
+        print(
+            'Downloading all "{}" data from {}'.format(resource, base_url), flush=True
+        )
 
     url = base_url + "/api/" + resource
     params = {
@@ -65,7 +67,8 @@ def download_resource(resource, subdomain="", max_pages=None, verbose=1):
             print(
                 "Only downloading first {} of {} pages of results".format(
                     max_pages, n_page
-                )
+                ),
+                flush=True,
             )
         n_page = max_pages
 
@@ -115,13 +118,14 @@ def download_resource_to_csv(
             'Will download "{}" data to CSV file {}'.format(
                 resource,
                 destination,
-            )
+            ),
+            flush=True,
         )
     df = download_resource(
         resource, subdomain=subdomain, max_pages=max_pages, verbose=verbose
     )
     if verbose >= 1:
-        print("Saving output dataset to {}".format(destination))
+        print("Saving output dataset to {}".format(destination), flush=True)
     os.makedirs(os.path.dirname(destination), exist_ok=True)
     df.to_csv(destination, index=False)
     if verbose >= 1:
@@ -130,7 +134,8 @@ def download_resource_to_csv(
                 len(df),
                 resource,
                 datetime.timedelta(seconds=time.time() - t0),
-            )
+            ),
+            flush=True,
         )
     return df
 
@@ -204,7 +209,7 @@ def cached_download_nopagination(
     fname = get_cache_path(resource, cache_dir, subdomain=subdomain)
     if os.path.isfile(fname) and not force:
         if verbose >= 1:
-            print("Loading from cache {}".format(fname))
+            print("Loading from cache {}".format(fname), flush=True)
         df = pd.read_csv(fname)
         updated = False
     else:
@@ -265,7 +270,10 @@ def cached_download_paginated(
     }
 
     if verbose >= 1:
-        print('Downloading paginated "{}" data from {}'.format(resource, base_url))
+        print(
+            'Downloading paginated "{}" data from {}'.format(resource, base_url),
+            flush=True,
+        )
 
     dirname = os.path.dirname(
         get_cache_path(resource, cache_dir, subdomain=subdomain, page=1)
@@ -307,7 +315,8 @@ def cached_download_paginated(
             print(
                 "Loading {} (of {}) cached pages".format(
                     n_pages_to_load, n_downloaded_pages
-                )
+                ),
+                flush=True,
             )
 
         for page in _range(1, n_pages_to_load + 1):
@@ -335,10 +344,10 @@ def cached_download_paginated(
     # added and this is now only part of the last page.
     if verbose >= 1:
         if n_pages_to_load > 0:
-            print("Re-downloading last cached page, to check for updates")
+            print("Re-downloading last cached page, to check for updates", flush=True)
             existing_n_records_last = df["id"].iloc[-1]
         else:
-            print("Downloading first page")
+            print("Downloading first page", flush=True)
     page = max(1, n_pages_to_load)
     df, n_page = cached_dl_single(page, return_npage=True, _force=True)
     if stacked_df is None or n_pages_to_load == 1:
@@ -368,7 +377,8 @@ def cached_download_paginated(
                 n_page - prior_page,
                 n_page,
                 "" if max_pages is None else "requested ",
-            )
+            ),
+            flush=True,
         )
     # Load remaining pages, saving them to the cache
     for page in _range(prior_page + 1, n_page + 1):
@@ -461,7 +471,8 @@ def download_resource_to_csv_cached(
             'Will download (cached) "{}" data to CSV file {}'.format(
                 resource,
                 destination,
-            )
+            ),
+            flush=True,
         )
 
     df, is_updated = cached_download(
@@ -474,7 +485,7 @@ def download_resource_to_csv_cached(
     )
 
     if verbose >= 1:
-        print("Saving output dataset to {}".format(destination))
+        print("Saving output dataset to {}".format(destination), flush=True)
     os.makedirs(os.path.dirname(destination), exist_ok=True)
     df.to_csv(destination, index=False)
     if verbose >= 1:
@@ -485,10 +496,11 @@ def download_resource_to_csv_cached(
                 resource,
                 "" if is_updated else "from cache ",
                 datetime.timedelta(seconds=time.time() - t0),
-            )
+            ),
+            flush=True,
         )
         if is_updated:
-            print("The cache was updated.")
+            print("The cache was updated.", flush=True)
 
     return df
 
@@ -605,7 +617,8 @@ def main():
         print(
             "Target file {} already exists and will be overwritten.".format(
                 kwargs["destination"]
-            )
+            ),
+            flush=True,
         )
 
     if kwargs["cache_dir"] is not None:
