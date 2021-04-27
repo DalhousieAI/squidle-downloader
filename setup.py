@@ -183,6 +183,7 @@ setup(
         "console_scripts": [
             "squidle-download-3x3=squidle_downloader.download_3x3:main",
             "squidle-download-resource=squidle_downloader.download_resource:main",
+            "squidle-build-dataset=squidle_downloader.build_dataset:main",
         ],
     },
     # Custom commands
