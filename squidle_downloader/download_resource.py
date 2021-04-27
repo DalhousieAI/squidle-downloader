@@ -126,7 +126,9 @@ def download_resource_to_csv(
     )
     if verbose >= 1:
         print("Saving output dataset to {}".format(destination), flush=True)
-    os.makedirs(os.path.dirname(destination), exist_ok=True)
+    destdir = os.path.dirname(destination)
+    if destdir:
+        os.makedirs(destdir, exist_ok=True)
     df.to_csv(destination, index=False)
     if verbose >= 1:
         print(
