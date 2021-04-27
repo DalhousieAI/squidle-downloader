@@ -563,8 +563,8 @@ def get_parser():
         type=int,
         default=None,
         help=(
-            "Maximum number of pages to download. By default, all pages"
-            " are downloaded."
+            "Maximum number of pages to download. Each page contains ten"
+            " thousand records. By default, all pages are downloaded."
         ),
     )
     parser.add_argument(
