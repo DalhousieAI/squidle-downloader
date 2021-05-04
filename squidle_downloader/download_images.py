@@ -62,9 +62,8 @@ def download_images_from_dataframe(df, output_dir, skip_existing=True, verbose=1
             n_already_downloaded += 1
             if verbose >= 3:
                 print(
-                    "    Skipping download of {}\n    Destination exists: {}".format(
-                        row["url"], destination
-                    )
+                    "    Skipping download of {}\n"
+                    "    Destination exists: {}".format(row["url"], destination)
                 )
             continue
         if verbose >= 2:
