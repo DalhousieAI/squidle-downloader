@@ -106,7 +106,14 @@ def download_images_from_dataframe(
 
 
 def download_images_from_csv(
-    input_csv, output_dir, *args, skip_existing=True, verbose=1, **kwargs
+    input_csv,
+    output_dir,
+    *args,
+    skip_existing=True,
+    verbose=1,
+    i_part=None,
+    n_part=None,
+    **kwargs
 ):
     """
     Download all images from a CSV file with contents in SQUIDLE format.
@@ -122,6 +129,12 @@ def download_images_from_csv(
         exist. Default is `True`.
     verbose : int, optional
         Verbosity level. Default is `1`.
+    i_part : int or None, optional
+        Run on only a partition of the CSV file. If `None` (default), the
+        entire dataset will be downloaded by this process. Otherwise, `n_part`
+        must also be set.
+    n_part : int or None, optional
+        Number of partitions being run. Default is `None`.
     **kwargs : optional
         Additional arguments as per `download_images_from_dataframe`.
 
@@ -130,8 +143,32 @@ def download_images_from_csv(
     None
     """
     t0 = time.time()
+    if (i_part is not None and n_part is None) or (
+        i_part is None and n_part is not None
+    ):
+        raise ValueError(
+            "Both `i_part` and `n_part` must be defined when partitioning"
+            " the CSV file."
+        )
+    skiprows = []
+    if n_part:
+        part_str = "(part {} of {})".format(i_part, n_part)
+        n_lines = utils.count_lines(input_csv) - 1
+        partition_size = n_lines / n_part
+        i_part == 0 if i_part == n_part else i_part
+        start_idx = round(i_part * partition_size)
+        end_idx = round((i_part + 1) * partition_size)
+        skiprows = list(range(1, 1 + start_idx)) + list(range(1 + end_idx, 1 + n_lines))
+
     if verbose >= 1:
-        print("Will download all images from {} to {}".format(input_csv, output_dir))
+        print(
+            "Will download {} images {}listed in {}".format(
+                "all" if not n_part else end_idx - start_idx,
+                "" if not n_part else part_str + " ",
+                input_csv,
+            )
+        )
+        print("To output directory {}".format(output_dir))
         if skip_existing:
             print("Existing outputs will be skipped.")
         else:
@@ -154,6 +191,7 @@ def download_images_from_csv(
             "platform": str,
         },
         parse_dates=["timestamp"],
+        skiprows=skiprows,
     )
     if verbose >= 1:
         print("Loaded CSV file in {:.1f} seconds".format(time.time() - t0))
@@ -212,6 +250,19 @@ def get_parser():
         dest="use_tqdm",
         action="store_false",
         help="Disable tqdm progress bar.",
+    )
+    parser.add_argument(
+        "--npart",
+        dest="n_part",
+        type=int,
+        help="Number of processing partitions being run.",
+    )
+    parser.add_argument(
+        "--part",
+        "--ipart",
+        dest="i_part",
+        type=int,
+        help="Partition index for this process.",
     )
     parser.add_argument(
         "--verbose",

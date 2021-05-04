@@ -69,3 +69,23 @@ def build_base_url(subdomain):
     if subdomain:
         subdomain += "."
     return "https://{}squidle.org".format(subdomain)
+
+
+def count_lines(filename):
+    """
+    Count the number of lines in a file.
+
+    Parameters
+    ----------
+    filename : str
+        Path to file.
+
+    Returns
+    -------
+    int
+        Number of lines in file.
+    """
+    with open(filename, "rb") as f:
+        for _i, _ in enumerate(f):
+            pass
+    return _i + 1
