@@ -18,7 +18,9 @@ import tqdm
 from . import __meta__, utils
 
 
-def download_images_from_dataframe(df, output_dir, skip_existing=True, verbose=1):
+def download_images_from_dataframe(
+    df, output_dir, skip_existing=True, verbose=1, use_tqdm=True
+):
     """
     Download all images from a dataframe in SQUIDLE format.
 
@@ -33,6 +35,9 @@ def download_images_from_dataframe(df, output_dir, skip_existing=True, verbose=1
         exist. Default is `True`.
     verbose : int, optional
         Verbosity level. Default is `1`.
+    use_tqdm : bool, optional
+        Whether to use tqdm to print progress. Disable if writing to a file.
+        Default is `True`.
 
     Returns
     -------
@@ -41,7 +46,7 @@ def download_images_from_dataframe(df, output_dir, skip_existing=True, verbose=1
     if verbose >= 1:
         print("Downloading {} images".format(len(df)))
 
-    if verbose == 1:
+    if verbose == 1 and use_tqdm:
         maybe_tqdm = functools.partial(tqdm.tqdm, total=len(df))
     else:
         maybe_tqdm = lambda x: x  # noqa: E731
@@ -49,7 +54,9 @@ def download_images_from_dataframe(df, output_dir, skip_existing=True, verbose=1
     n_already_downloaded = 0
     n_download = 0
 
-    for _i_row, row in maybe_tqdm(df.iterrows()):
+    t0 = time.time()
+
+    for i_row, row in maybe_tqdm(df.iterrows()):
         ext = os.path.splitext(row["url"])[-1]
         destination = os.path.join(
             output_dir,
@@ -57,6 +64,24 @@ def download_images_from_dataframe(df, output_dir, skip_existing=True, verbose=1
             row["deployment"],
             row["key"] + ext,
         )
+        if (
+            verbose >= 1
+            and not use_tqdm
+            and i_row > 0
+            and (i_row <= 5 or i_row % 100 == 0)
+        ):
+            t_elapsed = time.time() - t0
+            t_remain = t_elapsed / i_row * (len(df) - i_row)
+            print(
+                "Processed {}/{} urls ({:7.3f}%) in {} (approx. {} remaining)".format(
+                    i_row,
+                    len(df),
+                    i_row / len(df),
+                    datetime.timedelta(seconds=t_elapsed),
+                    datetime.timedelta(seconds=t_remain),
+                )
+            )
+
         os.makedirs(os.path.dirname(destination), exist_ok=True)
         if skip_existing and os.path.isfile(destination):
             n_already_downloaded += 1
@@ -97,6 +122,8 @@ def download_images_from_csv(
         exist. Default is `True`.
     verbose : int, optional
         Verbosity level. Default is `1`.
+    **kwargs : optional
+        Additional arguments as per `download_images_from_dataframe`.
 
     Returns
     -------
@@ -179,6 +206,12 @@ def get_parser():
         "output_dir",
         type=str,
         help="Root directory for downloaded images.",
+    )
+    parser.add_argument(
+        "--no-tqdm",
+        dest="use_tqdm",
+        action="store_false",
+        help="Disable tqdm progress bar.",
     )
     parser.add_argument(
         "--verbose",
