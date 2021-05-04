@@ -232,7 +232,7 @@ def dataset_multidomain_to_csv(destination, *args, verbose=1, **kwargs):
     if verbose >= 1:
         print("Saving output dataset to {}".format(destination), flush=True)
     destdir = os.path.dirname(destination)
-    if destdir:
+    if destdir and not os.path.isdir(destdir):
         os.makedirs(destdir, exist_ok=True)
     df.to_csv(destination, index=False)
     if verbose >= 1:

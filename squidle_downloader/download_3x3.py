@@ -159,7 +159,9 @@ def download_dataset_3x3(df, data_dir, verbose=1):
                         )
                     )
                 destination = os.path.join(data_dir, rel_dest)
-                os.makedirs(os.path.split(destination)[0], exist_ok=True)
+                destdir = os.path.dirname(destination)
+                if destdir and not os.path.isdir(destdir):
+                    os.makedirs(destdir, exist_ok=True)
                 subimg.save(os.path.join(data_dir, destination))
             row = row.copy()
             row["path"] = destination
