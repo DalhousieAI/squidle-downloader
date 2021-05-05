@@ -44,7 +44,7 @@ def download_images_from_dataframe(
     None
     """
     if verbose >= 1:
-        print("Downloading {} images".format(len(df)))
+        print("Downloading {} images".format(len(df)), flush=True)
 
     if verbose == 1 and use_tqdm:
         maybe_tqdm = functools.partial(tqdm.tqdm, total=len(df))
@@ -79,7 +79,8 @@ def download_images_from_dataframe(
                     i_row / len(df),
                     datetime.timedelta(seconds=t_elapsed),
                     datetime.timedelta(seconds=t_remain),
-                )
+                ),
+                flush=True,
             )
 
         os.makedirs(os.path.dirname(destination), exist_ok=True)
@@ -88,11 +89,14 @@ def download_images_from_dataframe(
             if verbose >= 3:
                 print(
                     "    Skipping download of {}\n"
-                    "    Destination exists: {}".format(row["url"], destination)
+                    "    Destination exists: {}".format(row["url"], destination),
+                    flush=True,
                 )
             continue
         if verbose >= 2:
-            print("    Downloading {} to {}".format(row["url"], destination))
+            print(
+                "    Downloading {} to {}".format(row["url"], destination), flush=True
+            )
         _, headers = urllib.request.urlretrieve(row["url"], filename=destination)
         n_download += 1
 
@@ -100,7 +104,8 @@ def download_images_from_dataframe(
         print("Finished processing {} images".format(len(df)))
         print(
             "There were {} images already downloaded. The remaining {} images"
-            " were downloaded.".format(n_already_downloaded, n_download)
+            " were downloaded.".format(n_already_downloaded, n_download),
+            flush=True,
         )
     return
 
@@ -170,9 +175,9 @@ def download_images_from_csv(
         )
         print("To output directory {}".format(output_dir))
         if skip_existing:
-            print("Existing outputs will be skipped.")
+            print("Existing outputs will be skipped.", flush=True)
         else:
-            print("Existing outputs will be overwritten.")
+            print("Existing outputs will be overwritten.", flush=True)
         print("Reading CSV file...")
     df = pd.read_csv(
         input_csv,
@@ -194,11 +199,14 @@ def download_images_from_csv(
         skiprows=skiprows,
     )
     if verbose >= 1:
-        print("Loaded CSV file in {:.1f} seconds".format(time.time() - t0))
+        print("Loaded CSV file in {:.1f} seconds".format(time.time() - t0), flush=True)
     ret = download_images_from_dataframe(
         df, output_dir, *args, skip_existing=skip_existing, verbose=verbose, **kwargs
     )
-    print("Total runtime: {}".format(datetime.timedelta(seconds=time.time() - t0)))
+    print(
+        "Total runtime: {}".format(datetime.timedelta(seconds=time.time() - t0)),
+        flush=True,
+    )
     return ret
 
 
