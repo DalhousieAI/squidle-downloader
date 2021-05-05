@@ -73,10 +73,11 @@ def download_images_from_dataframe(
             t_elapsed = time.time() - t0
             t_remain = t_elapsed / i_row * (len(df) - i_row)
             print(
-                "Processed {}/{} urls ({:7.3f}%) in {} (approx. {} remaining)".format(
+                "Processed {:4d}/{} urls ({:6.2f}%) in {} (approx. {} remaining)"
+                "".format(
                     i_row,
                     len(df),
-                    i_row / len(df),
+                    100 * i_row / len(df),
                     datetime.timedelta(seconds=t_elapsed),
                     datetime.timedelta(seconds=t_remain),
                 ),
