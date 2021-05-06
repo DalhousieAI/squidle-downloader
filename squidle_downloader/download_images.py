@@ -19,7 +19,7 @@ from . import __meta__, utils
 
 
 def download_images_from_dataframe(
-    df, output_dir, skip_existing=True, verbose=1, use_tqdm=True
+    df, output_dir, skip_existing=True, delete_partial=True, verbose=1, use_tqdm=True
 ):
     """
     Download all images from a dataframe in SQUIDLE format.
@@ -33,6 +33,10 @@ def download_images_from_dataframe(
     skip_existing : bool, optional
         Whether to skip downloading files for which the destination already
         exist. Default is `True`.
+    delete_partial : bool, optional
+        Whether to delete partially downloaded files in the event of an error,
+        such as running out of disk space or keyboard interrupt.
+        Default is `True`.
     verbose : int, optional
         Verbosity level. Default is `1`.
     use_tqdm : bool, optional
@@ -98,8 +102,17 @@ def download_images_from_dataframe(
             print(
                 "    Downloading {} to {}".format(row["url"], destination), flush=True
             )
-        _, headers = urllib.request.urlretrieve(row["url"], filename=destination)
-        n_download += 1
+        try:
+            _, headers = urllib.request.urlretrieve(row["url"], filename=destination)
+            n_download += 1
+        except BaseException:
+            if os.path.isfile(destination) and delete_partial:
+                print(
+                    "An error occured while processing {}.\n"
+                    "Deleting partial file {}".format(row["url"], destination)
+                )
+                os.remove(destination)
+            raise
 
     if verbose >= 1:
         print("Finished processing {} images".format(len(df)))
@@ -278,6 +291,12 @@ def get_parser():
         dest="skip_existing",
         action="store_false",
         help="Overwrite existing outputs instead of skipping their download.",
+    )
+    parser.add_argument(
+        "--keep-on-error",
+        dest="delete_partial",
+        action="store_false",
+        help="Keep partially downloaded files in the event of an error.",
     )
     parser.add_argument(
         "--verbose",
