@@ -274,6 +274,12 @@ def get_parser():
         help="Partition index for this process.",
     )
     parser.add_argument(
+        "--clobber",
+        dest="skip_existing",
+        action="store_false",
+        help="Overwrite existing outputs instead of skipping their download.",
+    )
+    parser.add_argument(
         "--verbose",
         "-v",
         action="count",
