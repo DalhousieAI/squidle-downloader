@@ -3,6 +3,28 @@ Utility functions.
 """
 
 
+def remove_prefix(text, prefix):
+    """
+    Remove a prefix from a string.
+
+    Parameters
+    ----------
+    text : str
+        String possibly starting with `prefix`.
+    prefix : str
+        The prefix string to remove.
+
+    Returns
+    -------
+    str
+        String like `text`, but with `prefix` removed if it occured at the
+        start of `text`.
+    """
+    if text.startswith(prefix):
+        return text[len(prefix) :]
+    return text
+
+
 def unique_map(arr):
     """
     Generate a mapping from unique value in an array to their locations.
