@@ -198,7 +198,6 @@ def download_images_from_csv(
         dtype={
             "key": str,
             "url": str,
-            "key": str,
             "timestamp": str,
             "altitude": np.float32,
             "depth": np.float32,
