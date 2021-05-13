@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Building consolidated label schema for SQUIDLE data.
+Downloading images listed in a SQUIDLE formatted CSV file.
 """
 
 import datetime
@@ -326,7 +326,7 @@ def get_parser():
 
 def main():
     """
-    Run command line interface for downloading 3x3 labelled images.
+    Run command line interface for downloading images.
     """
     parser = get_parser()
     kwargs = vars(parser.parse_args())
