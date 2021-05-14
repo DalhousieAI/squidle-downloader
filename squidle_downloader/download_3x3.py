@@ -286,7 +286,6 @@ def get_parser():
             printed to the terminal.
         """,
     )
-
     return parser
 
 
