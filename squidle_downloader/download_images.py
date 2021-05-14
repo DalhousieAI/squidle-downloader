@@ -147,8 +147,8 @@ def download_images_from_csv(
     *args,
     skip_existing=True,
     verbose=1,
-    i_part=None,
-    n_part=None,
+    i_proc=None,
+    n_proc=None,
     **kwargs
 ):
     """
@@ -165,11 +165,11 @@ def download_images_from_csv(
         exist. Default is `True`.
     verbose : int, optional
         Verbosity level. Default is `1`.
-    i_part : int or None, optional
+    i_proc : int or None, optional
         Run on only a partition of the CSV file. If `None` (default), the
-        entire dataset will be downloaded by this process. Otherwise, `n_part`
+        entire dataset will be downloaded by this process. Otherwise, `n_proc`
         must also be set.
-    n_part : int or None, optional
+    n_proc : int or None, optional
         Number of partitions being run. Default is `None`.
     **kwargs : optional
         Additional arguments as per `download_images_from_dataframe`.
@@ -179,28 +179,28 @@ def download_images_from_csv(
     None
     """
     t0 = time.time()
-    if (i_part is not None and n_part is None) or (
-        i_part is None and n_part is not None
+    if (i_proc is not None and n_proc is None) or (
+        i_proc is None and n_proc is not None
     ):
         raise ValueError(
-            "Both `i_part` and `n_part` must be defined when partitioning"
+            "Both `i_proc` and `n_proc` must be defined when partitioning"
             " the CSV file."
         )
     skiprows = []
-    if n_part:
-        part_str = "(part {} of {})".format(i_part, n_part)
+    if n_proc:
+        part_str = "(part {} of {})".format(i_proc, n_proc)
         n_lines = utils.count_lines(input_csv) - 1
-        partition_size = n_lines / n_part
-        i_part == 0 if i_part == n_part else i_part
-        start_idx = round(i_part * partition_size)
-        end_idx = round((i_part + 1) * partition_size)
+        partition_size = n_lines / n_proc
+        i_proc == 0 if i_proc == n_proc else i_proc
+        start_idx = round(i_proc * partition_size)
+        end_idx = round((i_proc + 1) * partition_size)
         skiprows = list(range(1, 1 + start_idx)) + list(range(1 + end_idx, 1 + n_lines))
 
     if verbose >= 1:
         print(
             "Will download {} images {}listed in {}".format(
-                "all" if not n_part else end_idx - start_idx,
-                "" if not n_part else part_str + " ",
+                "all" if not n_proc else end_idx - start_idx,
+                "" if not n_proc else part_str + " ",
                 input_csv,
             )
         )
@@ -291,15 +291,15 @@ def get_parser():
         help="Disable tqdm progress bar.",
     )
     parser.add_argument(
-        "--npart",
-        dest="n_part",
+        "--nproc",
+        dest="n_proc",
         type=int,
         help="Number of processing partitions being run.",
     )
     parser.add_argument(
-        "--part",
-        "--ipart",
-        dest="i_part",
+        "--proc",
+        "--iproc",
+        dest="i_proc",
         type=int,
         help="Partition index for this process.",
     )
