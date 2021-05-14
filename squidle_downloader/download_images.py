@@ -19,7 +19,13 @@ from . import __meta__, utils
 
 
 def download_images_from_dataframe(
-    df, output_dir, skip_existing=True, delete_partial=True, verbose=1, use_tqdm=True
+    df,
+    output_dir,
+    skip_existing=True,
+    delete_partial=True,
+    verbose=1,
+    use_tqdm=True,
+    print_indent=0,
 ):
     """
     Download all images from a dataframe in SQUIDLE format.
@@ -42,13 +48,18 @@ def download_images_from_dataframe(
     use_tqdm : bool, optional
         Whether to use tqdm to print progress. Disable if writing to a file.
         Default is `True`.
+    print_indent : int, optional
+        Amount of whitespace padding to precede print statements.
+        Default is `0`.
 
     Returns
     -------
     None
     """
+    padding = " " * print_indent
+    innerpad = padding + " " * 4
     if verbose >= 1:
-        print("Downloading {} images".format(len(df)), flush=True)
+        print(padding + "Downloading {} images".format(len(df)), flush=True)
 
     if verbose == 1 and use_tqdm:
         maybe_tqdm = functools.partial(tqdm.tqdm, total=len(df))
@@ -77,8 +88,9 @@ def download_images_from_dataframe(
             t_elapsed = time.time() - t0
             t_remain = t_elapsed / i_row * (len(df) - i_row)
             print(
-                "Processed {:4d}/{} urls ({:6.2f}%) in {} (approx. {} remaining)"
+                "{}Processed {:4d}/{} urls ({:6.2f}%) in {} (approx. {} remaining)"
                 "".format(
+                    padding,
                     i_row,
                     len(df),
                     100 * i_row / len(df),
@@ -93,14 +105,17 @@ def download_images_from_dataframe(
             n_already_downloaded += 1
             if verbose >= 3:
                 print(
-                    "    Skipping download of {}\n"
-                    "    Destination exists: {}".format(row["url"], destination),
+                    "{}Skipping download of {}\n"
+                    "{}Destination exists: {}".format(
+                        innerpad, row["url"], innerpad, destination
+                    ),
                     flush=True,
                 )
             continue
         if verbose >= 2:
             print(
-                "    Downloading {} to {}".format(row["url"], destination), flush=True
+                "{}Downloading {} to {}".format(innerpad, row["url"], destination),
+                flush=True,
             )
         try:
             _, headers = urllib.request.urlretrieve(row["url"], filename=destination)
@@ -108,17 +123,19 @@ def download_images_from_dataframe(
         except BaseException:
             if os.path.isfile(destination) and delete_partial:
                 print(
-                    "An error occured while processing {}.\n"
-                    "Deleting partial file {}".format(row["url"], destination)
+                    "{}An error occured while processing {}.\n"
+                    "{}Deleting partial file {}".format(
+                        innerpad, row["url"], innerpad, destination
+                    )
                 )
                 os.remove(destination)
             raise
 
     if verbose >= 1:
-        print("Finished processing {} images".format(len(df)))
+        print(padding + "Finished processing {} images".format(len(df)))
         print(
-            "There were {} images already downloaded. The remaining {} images"
-            " were downloaded.".format(n_already_downloaded, n_download),
+            "{}There were {} images already downloaded. The remaining {} images"
+            " were downloaded.".format(padding, n_already_downloaded, n_download),
             flush=True,
         )
     return
