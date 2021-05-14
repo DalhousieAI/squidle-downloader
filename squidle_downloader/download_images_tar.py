@@ -90,7 +90,7 @@ def download_images(
         if verbose >= 1:
             print("{}Existing file {} deleted".format(padding, tar_fname), flush=True)
 
-    for i_row, row in maybe_tqdm(df.iterrows()):
+    for i_row, (_, row) in enumerate(maybe_tqdm(df.iterrows())):
         if (
             verbose >= 1
             and not use_tqdm
