@@ -129,7 +129,7 @@ def download_images(
                 continue
 
             try:
-                r = requests.get(row["url"], stream=True)
+                r = requests.get(row["url"].strip(), stream=True)
             except requests.exceptions.RequestException as err:
                 print("Error handing: {}".format(row["url"]))
                 print(err)

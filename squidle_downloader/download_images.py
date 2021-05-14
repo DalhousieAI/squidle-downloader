@@ -123,7 +123,9 @@ def download_images_from_dataframe(
                 flush=True,
             )
         try:
-            _, headers = urllib.request.urlretrieve(row["url"], filename=destination)
+            _, headers = urllib.request.urlretrieve(
+                row["url"].strip(), filename=destination
+            )
             n_download += 1
         except BaseException:
             if os.path.isfile(destination) and delete_partial:
