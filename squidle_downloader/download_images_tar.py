@@ -114,7 +114,7 @@ def download_images(
 
         destination = row["key"]
         ext = os.path.splitext(destination)[1]
-        expected_ext = os.path.splitext(row["url"])[1]
+        expected_ext = os.path.splitext(row["url"].rstrip(" /"))[1]
         if expected_ext and ext.lower() != expected_ext.lower():
             destination += expected_ext
         destination = os.path.join(row["deployment"], destination)
