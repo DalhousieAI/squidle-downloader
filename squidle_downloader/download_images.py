@@ -211,10 +211,10 @@ def download_images_from_csv(
         )
         print("To output directory {}".format(output_dir))
         if skip_existing:
-            print("Existing outputs will be skipped.", flush=True)
+            print("Existing outputs will be skipped.")
         else:
-            print("Existing outputs will be overwritten.", flush=True)
-        print("Reading CSV file...")
+            print("Existing outputs will be overwritten.")
+        print("Reading CSV file...", flush=True)
     df = pd.read_csv(
         input_csv,
         dtype={
