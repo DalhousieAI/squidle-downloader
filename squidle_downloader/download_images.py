@@ -64,6 +64,7 @@ def download_images_from_dataframe(
     if verbose == 1 and use_tqdm:
         maybe_tqdm = functools.partial(tqdm.tqdm, total=len(df))
     else:
+        use_tqdm = False
         maybe_tqdm = lambda x: x  # noqa: E731
 
     n_already_downloaded = 0
