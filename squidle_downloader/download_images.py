@@ -138,9 +138,21 @@ def download_images_from_dataframe(
 
     if verbose >= 1:
         print(padding + "Finished processing {} images".format(len(df)))
+        if n_download == 0:
+            extra_str = ""
+        else:
+            extra_str = "The remaining {} image{} downloaded.".format(
+                n_download,
+                " was" if n_download == 1 else "s were",
+            )
         print(
-            "{}There were {} images already downloaded. The remaining {} images"
-            " were downloaded.".format(padding, n_already_downloaded, n_download),
+            "{}{} {} image{} already downloaded.{}".format(
+                padding,
+                "All" if n_download == 0 else "There were",
+                n_already_downloaded,
+                "" if n_already_downloaded == 1 else "s",
+                extra_str,
+            ),
             flush=True,
         )
     return
