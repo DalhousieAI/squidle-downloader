@@ -216,10 +216,11 @@ def download_images_from_csv(
     ret = download_images_from_dataframe(
         df, output_dir, *args, skip_existing=skip_existing, verbose=verbose, **kwargs
     )
-    print(
-        "Total runtime: {}".format(datetime.timedelta(seconds=time.time() - t0)),
-        flush=True,
-    )
+    if verbose >= 1:
+        print(
+            "Total runtime: {}".format(datetime.timedelta(seconds=time.time() - t0)),
+            flush=True,
+        )
     return ret
 
 
