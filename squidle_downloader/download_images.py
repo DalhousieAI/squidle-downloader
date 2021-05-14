@@ -226,7 +226,7 @@ def download_images_from_csv(
             print("Existing outputs will be skipped.")
         else:
             print("Existing outputs will be overwritten.")
-        print("Reading CSV file...", flush=True)
+        print("Reading CSV file ({})...".format(utils.file_size(input_csv)), flush=True)
     df = pd.read_csv(
         input_csv,
         dtype={

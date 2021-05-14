@@ -2,6 +2,8 @@
 Utility functions.
 """
 
+import os
+
 
 def remove_prefix(text, prefix):
     """
@@ -111,3 +113,44 @@ def count_lines(filename):
         for _i, _ in enumerate(f):
             pass
     return _i + 1
+
+
+def file_size(filename, sf=3):
+    """
+    Get the size of a file, in human readable units.
+
+    Parameters
+    ----------
+    filename : str
+        Path to file.
+    sf : int, optional
+        Number of significant figures to include. Default is `3`.
+
+    Returns
+    -------
+    str
+        The size of the file in human readable format.
+    """
+
+    def convert_bytes(num):
+        """
+        Convert units of bytes into human readable kB, MB, GB, or TB.
+        """
+        for unit in ["bytes", "kB", "MB", "GB", "TB"]:
+            if num >= 1024:
+                num /= 1024
+                continue
+            digits = sf
+            if num >= 1:
+                digits -= 1
+            if num >= 10:
+                digits -= 1
+            if num >= 100:
+                digits -= 1
+            if num >= 1000:
+                digits -= 1
+            digits = max(0, digits)
+            fmt = "{:." + str(digits) + "f} {}"
+            return fmt.format(num, unit)
+
+    return convert_bytes(os.stat(filename).st_size)
