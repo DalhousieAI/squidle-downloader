@@ -238,20 +238,22 @@ def download_images_by_campaign(
             "Both `i_proc` and `n_proc` must be defined when partitioning"
             " the CSV file."
         )
-    if n_proc and i_proc == n_proc:
-        i_proc = 0
 
     if verbose >= 2 and not skip_existing:
         print("Warning: Existing outputs will result in an error.", flush=True)
 
     campaign2idx = utils.unique_map(df["campaign"])
 
-    n_processed = 0
-    n_to_process = len(campaign2idx)
+    campaigns_to_process = sorted(campaign2idx)
+
     if n_proc:
-        n_to_process = len(campaign2idx) // n_proc
-        if i_proc < (len(campaign2idx) % n_proc):
-            n_to_process += 1
+        partition_size = len(campaign2idx) / n_proc
+        i_proc == 0 if i_proc == n_proc else i_proc
+        start_idx = round(i_proc * partition_size)
+        end_idx = round((i_proc + 1) * partition_size)
+        campaigns_to_process = campaigns_to_process[start_idx:end_idx]
+
+    n_to_process = len(campaigns_to_process)
 
     if verbose >= 1:
         print(
@@ -268,27 +270,25 @@ def download_images_by_campaign(
             )
 
     if verbose == 1 and use_tqdm:
-        maybe_tqdm = functools.partial(tqdm.tqdm, total=len(campaign2idx))
+        maybe_tqdm = tqdm.tqdm
     else:
         use_tqdm = False
         maybe_tqdm = lambda x: x  # noqa: E731
 
-    for i_campaign, campaign in enumerate(maybe_tqdm(sorted(campaign2idx))):
+    for i_campaign, campaign in enumerate(maybe_tqdm(campaigns_to_process)):
         if not n_proc:
             pass
-        elif i_campaign % n_proc != i_proc:
-            continue
 
-        if verbose >= 1 and not use_tqdm and n_processed > 0:
+        if verbose >= 1 and not use_tqdm and i_campaign > 0:
             t_elapsed = time.time() - t0
-            t_remain = t_elapsed / n_processed * (n_to_process - n_processed)
+            t_remain = t_elapsed / i_campaign * (n_to_process - i_campaign)
             print(
                 "{}Processed {:3d}/{} campaigns ({:6.2f}%) in {} (approx. {} remaining)"
                 "".format(
                     padding,
-                    n_processed,
+                    i_campaign,
                     n_to_process,
-                    100 * n_processed / n_to_process,
+                    100 * i_campaign / n_to_process,
                     datetime.timedelta(seconds=t_elapsed),
                     datetime.timedelta(seconds=t_remain),
                 )
@@ -312,13 +312,11 @@ def download_images_by_campaign(
             use_tqdm=use_tqdm,
             print_indent=print_indent + 4,
         )
-        n_processed += 1
 
     if verbose >= 1:
         print(
-            "Processed {}/{} campaigns in {}".format(
-                n_processed,
-                len(campaign2idx),
+            "Processed {} campaigns in {}".format(
+                n_to_process,
                 datetime.timedelta(seconds=time.time() - t0),
             ),
             flush=True,
