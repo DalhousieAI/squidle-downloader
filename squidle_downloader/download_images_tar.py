@@ -14,6 +14,7 @@ import time
 
 import numpy as np
 import pandas as pd
+import PIL.Image
 import requests
 import tqdm
 
@@ -21,7 +22,14 @@ from . import __meta__, utils
 
 
 def download_images(
-    df, tar_fname, skip_existing=True, verbose=1, use_tqdm=True, print_indent=0
+    df,
+    tar_fname,
+    convert_to_jpeg=False,
+    jpeg_quality=95,
+    skip_existing=True,
+    verbose=1,
+    use_tqdm=True,
+    print_indent=0,
 ):
     """
     Download images into a tarball.
@@ -32,6 +40,10 @@ def download_images(
         Dataset of images to download.
     tar_fname : str
         Path to output tarball file.
+    convert_to_jpeg : bool, optional
+        Whether to convert PNG images to JPEG format. Default is `False`.
+    jpeg_quality : int or float, optional
+        Quality to use when converting to JPEG. Default is `95`.
     verbose : int, optional
         Verbosity level. Default is `1`.
     use_tqdm : bool, optional
@@ -112,12 +124,18 @@ def download_images(
                 flush=True,
             )
 
-        destination = row["key"]
+        destination = row["key"].strip()
         ext = os.path.splitext(destination)[1]
         expected_ext = os.path.splitext(row["url"].rstrip(" /"))[1]
         if expected_ext and ext.lower() != expected_ext.lower():
             destination += expected_ext
         destination = os.path.join(row["deployment"], destination)
+        ext = os.path.splitext(destination)[1]
+        if convert_to_jpeg and ext.lower() not in {".jpg", ".jpeg"}:
+            needs_conversion = True
+            destination = os.path.splitext(destination)[0] + ".jpg"
+        else:
+            needs_conversion = False
 
         with tarfile.open(tar_fname, mode="a") as tar:
             if destination in tar.getnames():
@@ -147,13 +165,33 @@ def download_images(
             if verbose >= 3:
                 print(innerpad + "Downloading {}".format(row["url"]))
             with tempfile.TemporaryDirectory() as dir_tmp:
-                fname_tmp = os.path.join(dir_tmp, os.path.basename(destination))
+                fname_tmp = os.path.join(
+                    dir_tmp,
+                    os.path.basename(row["url"].rstrip(" /")),
+                )
 
                 with open(fname_tmp, "wb") as f:
                     for chunk in r:
                         f.write(chunk)
                 if verbose >= 4:
                     print(innerpad + "  Wrote to {}".format(fname_tmp))
+
+                if needs_conversion:
+                    fname_tmp_new = os.path.join(
+                        dir_tmp,
+                        os.path.basename(destination),
+                    )
+                    if verbose >= 4:
+                        print(
+                            innerpad
+                            + "  Converting {} to JPEG {}".format(
+                                fname_tmp, fname_tmp_new
+                            )
+                        )
+                    im = PIL.Image.open(fname_tmp)
+                    im = im.convert("RGB")
+                    im.save(fname_tmp_new, quality=jpeg_quality)
+                    fname_tmp = fname_tmp_new
 
                 if verbose >= 4:
                     print(
@@ -194,6 +232,7 @@ def download_images_by_campaign(
     verbose=1,
     use_tqdm=True,
     print_indent=0,
+    **kwargs
 ):
     """
     Download all images from a DataFrame into tarfiles, one for each campaign.
@@ -222,6 +261,8 @@ def download_images_by_campaign(
     print_indent : int, optional
         Amount of whitespace padding to precede print statements.
         Default is `0`.
+    **kwargs
+        Additional keword arguments as per ``download_images``.
 
     Returns
     -------
@@ -311,6 +352,7 @@ def download_images_by_campaign(
             verbose=verbose - 1,
             use_tqdm=use_tqdm,
             print_indent=print_indent + 4,
+            **kwargs,
         )
 
     if verbose >= 1:
@@ -347,7 +389,7 @@ def download_images_by_campaign_from_csv(
     verbose : int, optional
         Verbosity level. Default is `1`.
     **kwargs
-        Additional arguments as per `download_images_by_campaign`.
+        Additional arguments as per ``download_images_by_campaign``.
 
     Returns
     -------
@@ -450,6 +492,18 @@ def get_parser():
         "output_dir",
         type=str,
         help="Root directory for downloaded images.",
+    )
+    parser.add_argument(
+        "--jpeg",
+        dest="convert_to_jpeg",
+        action="store_true",
+        help="Convert images to JPEG format.",
+    )
+    parser.add_argument(
+        "--jpeg-quality",
+        type=float,
+        default=95,
+        help="Quality to use when converting to JPEG. Default is %(default)s.",
     )
     parser.add_argument(
         "--no-tqdm",
