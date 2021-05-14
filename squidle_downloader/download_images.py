@@ -73,12 +73,16 @@ def download_images_from_dataframe(
     t0 = time.time()
 
     for i_row, row in maybe_tqdm(df.iterrows()):
-        ext = os.path.splitext(row["url"])[-1]
+        destination = row["key"]
+        ext = os.path.splitext(destination)[1]
+        expected_ext = os.path.splitext(row["url"])[1]
+        if expected_ext and ext.lower() != expected_ext.lower():
+            destination += expected_ext
         destination = os.path.join(
             output_dir,
             row["campaign"],
             row["deployment"],
-            row["key"] + ext,
+            destination,
         )
         if (
             verbose >= 1
