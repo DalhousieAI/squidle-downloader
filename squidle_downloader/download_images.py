@@ -310,13 +310,15 @@ def get_parser():
     parser.add_argument(
         "--nproc",
         dest="n_proc",
+        metavar="NPROC",
         type=int,
         help="Number of processing partitions being run.",
     )
     parser.add_argument(
-        "--proc",
         "--iproc",
+        "--proc",
         dest="i_proc",
+        metavar="IPROC",
         type=int,
         help="Partition index for this process.",
     )
