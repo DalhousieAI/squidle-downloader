@@ -393,11 +393,12 @@ def download_images_by_campaign(
             t_elapsed = time.time() - t0
             t_remain = t_elapsed / i_campaign * (n_to_process - i_campaign)
             print(
-                "{}Processed {:3d}/{} campaigns ({:6.2f}%) in {} (approx. {} remaining)"
-                "".format(
+                "{}Processed {:3d}/{} campaign{} ({:6.2f}%) in {} (approx. {}"
+                " remaining)".format(
                     padding,
                     i_campaign,
                     n_to_process,
+                    "" if n_to_process == 1 else "s",
                     100 * i_campaign / n_to_process,
                     datetime.timedelta(seconds=t_elapsed),
                     datetime.timedelta(seconds=t_remain),
@@ -432,8 +433,9 @@ def download_images_by_campaign(
         if not using_tqdm:
             print()
         print(
-            "Processed {} campaigns in {}".format(
+            "Processed {} campaign{} in {}".format(
                 n_to_process,
+                "" if n_to_process == 1 else "s",
                 datetime.timedelta(seconds=time.time() - t0),
             ),
             flush=True,
