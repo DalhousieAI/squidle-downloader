@@ -107,7 +107,16 @@ def download_images(
             print("{}Existing file {} deleted".format(padding, tar_fname), flush=True)
 
     for i_row, (_, row) in enumerate(maybe_tqdm(df.iterrows())):
-        if i_row > 0 and (
+        if pd.isna(row["url"]) or row["url"] == "":
+            n_error += 1
+            if verbose >= 2:
+                print(
+                    "{}Missing URL for entry\n{}".format(innerpad, row),
+                    flush=True,
+                )
+            continue
+
+        if i_row > n_error and (
             verbose >= 3
             or (verbose >= 1 and not use_tqdm and (i_row <= 5 or i_row % 100 == 0))
         ):

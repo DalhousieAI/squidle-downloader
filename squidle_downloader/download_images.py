@@ -74,6 +74,15 @@ def download_images_from_dataframe(
     t0 = time.time()
 
     for i_row, row in maybe_tqdm(df.iterrows()):
+        if pd.isna(row["url"]) or row["url"] == "":
+            n_error += 1
+            if verbose >= 2:
+                print(
+                    "{}Missing URL for entry\n{}".format(innerpad, row),
+                    flush=True,
+                )
+            continue
+
         destination = row["key"]
         ext = os.path.splitext(destination)[1]
         expected_ext = os.path.splitext(row["url"].rstrip(" /"))[1]
@@ -85,7 +94,7 @@ def download_images_from_dataframe(
             row["deployment"],
             destination,
         )
-        if i_row > 0 and (
+        if i_row > n_error and (
             verbose >= 3
             or (verbose >= 1 and not use_tqdm and (i_row <= 5 or i_row % 100 == 0))
         ):
