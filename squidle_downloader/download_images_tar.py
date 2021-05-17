@@ -143,7 +143,11 @@ def download_images(
         with tarfile.open(tar_fname, mode="a") as tar:
             if destination in tar.getnames():
                 if not skip_existing:
-                    raise EnvironmentError("")
+                    raise EnvironmentError(
+                        "Destination {} already exists within {}".format(
+                            destination, tar_fname
+                        )
+                    )
                 if verbose >= 3:
                     print(innerpad + "Already downloaded {}".format(destination))
                 n_already_downloaded += 1
