@@ -27,12 +27,13 @@ def download_images(
     convert_to_jpeg=False,
     jpeg_quality=95,
     skip_existing=True,
+    error_stream=None,
     return_valid=True,
     verbose=1,
     use_tqdm=True,
     print_indent=0,
 ):
-    """
+    r"""
     Download images into a tarball.
 
     Parameters
@@ -48,6 +49,10 @@ def download_images(
     skip_existing : bool, optional
         Whether to skip existing outputs. If `False`, an error is raised when
         the destination already exists. Default is `True`.
+    error_stream : text_stream or None, optional
+        A text stream where errors should be recorded. If provided, all URLs
+        which could not be downloaded due to an error will be written to this
+        stream, separated by `"\n"` characters.
     return_valid : bool, optional
         Whether to return a filtered DataFrame containing only rows which were
         downloaded.
@@ -136,6 +141,8 @@ def download_images(
                     "{}Missing URL for entry\n{}".format(innerpad, row),
                     flush=True,
                 )
+            if error_stream:
+                error_stream.write("{}\n".format(row["url"]))
             continue
 
         if i_row > n_error and (
@@ -193,6 +200,8 @@ def download_images(
                     print("Error handing: {}".format(row["url"]))
                     print(err)
                     n_error += 1
+                    if error_stream:
+                        error_stream.write(row["url"] + "\n")
                     continue
                 if r.status_code != 200:
                     if verbose >= 1:
@@ -203,6 +212,8 @@ def download_images(
                             )
                         )
                     n_error += 1
+                    if error_stream:
+                        error_stream.write(row["url"] + "\n")
                     continue
 
                 if verbose >= 3:
@@ -415,15 +426,26 @@ def download_images_by_campaign(
         subdf = df.loc[campaign2idx[campaign]]
         tar_fname = os.path.join(output_dir, "tar", campaign + ".tar")
 
-        outdf = download_images(
-            subdf,
-            tar_fname,
-            skip_existing=skip_existing,
-            verbose=verbose - 1,
-            use_tqdm=use_tqdm,
-            print_indent=print_indent + 4,
-            **kwargs,
-        )
+        error_fname = os.path.join(output_dir, "errors", campaign + ".log")
+        os.makedirs(os.path.dirname(error_fname), exist_ok=True)
+
+        with open(error_fname, "w") as file:
+            outdf = download_images(
+                subdf,
+                tar_fname,
+                skip_existing=skip_existing,
+                error_stream=file,
+                verbose=verbose - 1,
+                use_tqdm=use_tqdm,
+                print_indent=print_indent + 4,
+                **kwargs,
+            )
+            empty_error_log = file.tell() == 0
+
+        if empty_error_log:
+            # Delete empty file
+            os.remove(error_fname)
+
         # Save CSV output
         csv_fname = os.path.join(output_dir, "csv", campaign + ".csv")
         os.makedirs(os.path.dirname(csv_fname), exist_ok=True)
