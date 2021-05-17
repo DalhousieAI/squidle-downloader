@@ -304,8 +304,8 @@ def download_images_by_campaign(
 
     Parameters
     ----------
-    input_csv : str
-        Path to CSV file.
+    df : pandas.DataFrame
+        Input DataFrame, contining URLs to download.
     output_dir : str
         Path to output directory.
     skip_existing : bool, optional
