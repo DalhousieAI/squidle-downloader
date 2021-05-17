@@ -188,25 +188,41 @@ def download_images_from_dataframe(
             output_df = output_df.append(row)
 
     if verbose >= 1:
-        print(padding + "Finished processing {} images".format(len(df)))
-        s = "{}{} {} image{} already downloaded.".format(
-            padding,
-            "All" if n_already_downloaded == len(df) else "There were",
-            n_already_downloaded,
-            "" if n_already_downloaded == 1 else "s",
-        )
+        print(padding + "Finished processing {} images.".format(len(df)))
+        messages = []
+        if n_already_downloaded > 0:
+            s = ""
+            if n_already_downloaded == len(df):
+                s = "All"
+            elif n_already_downloaded == 1:
+                s = "There was"
+            else:
+                s = "There were"
+            s += " {} image{} already downloaded.".format(
+                n_already_downloaded,
+                "" if n_already_downloaded == 1 else "s",
+            )
+            messages.append(s)
         if n_error > 0:
-            s += " There {} {} download error{}.".format(
-                "was" if n_error == 1 else "were",
-                n_error,
-                "" if n_error == 1 else "s",
+            messages.append(
+                "There {} {} download error{}.".format(
+                    "was" if n_error == 1 else "were",
+                    n_error,
+                    "" if n_error == 1 else "s",
+                )
             )
         if n_download > 0:
-            s += " The remaining {} image{} downloaded.".format(
-                n_download,
-                " was" if n_download == 1 else "s were",
-            )
-        print(s, flush=True)
+            s = ""
+            if n_download == len(df):
+                s = "All {} images were downloaded.".format(n_download)
+            else:
+                s = "The remaining {} image{} downloaded.".format(
+                    n_download,
+                    " was" if n_download == 1 else "s were",
+                )
+            messages.append(s)
+        if messages:
+            print(padding + " ".join(messages), flush=True)
     return output_df
 
 
