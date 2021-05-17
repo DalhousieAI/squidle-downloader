@@ -77,6 +77,7 @@ def download_images(
 
     n_already_downloaded = 0
     n_download = 0
+    n_error = 0
 
     t0 = time.time()
 
@@ -158,6 +159,7 @@ def download_images(
             except requests.exceptions.RequestException as err:
                 print("Error handing: {}".format(row["url"]))
                 print(err)
+                n_error += 1
                 continue
             if r.status_code != 200:
                 if verbose >= 1:
@@ -167,6 +169,7 @@ def download_images(
                             r.status_code, row["url"]
                         )
                     )
+                n_error += 1
                 continue
 
             if verbose >= 3:
@@ -210,23 +213,24 @@ def download_images(
 
     if verbose >= 1:
         print(padding + "Finished processing {} images".format(len(df)))
-        if n_download == 0:
-            extra_str = ""
-        else:
-            extra_str = "The remaining {} image{} downloaded.".format(
+        s = "{}{} {} image{} already downloaded.".format(
+            padding,
+            "All" if n_already_downloaded == len(df) else "There were",
+            n_already_downloaded,
+            "" if n_already_downloaded == 1 else "s",
+        )
+        if n_error > 0:
+            s += " There {} {} download error{}.".format(
+                "was" if n_error == 1 else "were",
+                n_error,
+                "" if n_error == 1 else "s",
+            )
+        if n_download > 0:
+            s += " The remaining {} image{} downloaded.".format(
                 n_download,
                 " was" if n_download == 1 else "s were",
             )
-        print(
-            "{}{} {} image{} already downloaded.{}".format(
-                padding,
-                "All" if n_download == 0 else "There were",
-                n_already_downloaded,
-                "" if n_already_downloaded == 1 else "s",
-                extra_str,
-            ),
-            flush=True,
-        )
+        print(s, flush=True)
     return
 
 
