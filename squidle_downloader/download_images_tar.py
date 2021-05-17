@@ -69,6 +69,15 @@ def download_images(
             flush=True,
         )
 
+    if verbose >= 2:
+        print(
+            padding + "Sanitizing key and deployment fields",
+            flush=True,
+        )
+    df["deployment"] = utils.sanitize_filename_series(df["deployment"])
+    df["key"] = utils.sanitize_filename_series(df["key"])
+    df["url"] = df["url"].str.strip()
+
     if verbose == 1 and use_tqdm:
         maybe_tqdm = functools.partial(tqdm.tqdm, total=len(df))
     else:
@@ -135,9 +144,9 @@ def download_images(
                 flush=True,
             )
 
-        destination = row["key"].strip()
+        destination = row["key"]
         ext = os.path.splitext(destination)[1]
-        expected_ext = os.path.splitext(row["url"].rstrip(" /"))[1]
+        expected_ext = os.path.splitext(row["url"].rstrip("/"))[1]
         if expected_ext and ext.lower() != expected_ext.lower():
             destination += expected_ext
         destination = os.path.join(row["deployment"], destination)
@@ -184,7 +193,7 @@ def download_images(
             with tempfile.TemporaryDirectory() as dir_tmp:
                 fname_tmp = os.path.join(
                     dir_tmp,
-                    os.path.basename(row["url"].rstrip(" /")),
+                    os.path.basename(row["url"].rstrip("/")),
                 )
 
                 with open(fname_tmp, "wb") as f:
@@ -301,8 +310,11 @@ def download_images_by_campaign(
     if verbose >= 2 and not skip_existing:
         print("Warning: Existing outputs will result in an error.", flush=True)
 
-    campaign2idx = utils.unique_map(df["campaign"])
+    # Sanitise campaign names
+    df["campaign"] = utils.sanitize_filename_series(df["campaign"])
 
+    # Create mapping from unique campaigns to rows which bear that campaign
+    campaign2idx = utils.unique_map(df["campaign"])
     campaigns_to_process = sorted(campaign2idx)
 
     if n_proc:

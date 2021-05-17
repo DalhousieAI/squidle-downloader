@@ -61,6 +61,16 @@ def download_images_from_dataframe(
     if verbose >= 1:
         print(padding + "Downloading {} images".format(len(df)), flush=True)
 
+    if verbose >= 2:
+        print(
+            padding + "Sanitizing fields used to build filenames",
+            flush=True,
+        )
+    df["campaign"] = utils.sanitize_filename_series(df["campaign"])
+    df["deployment"] = utils.sanitize_filename_series(df["deployment"])
+    df["key"] = utils.sanitize_filename_series(df["key"])
+    df["url"] = df["url"].str.strip()
+
     if verbose == 1 and use_tqdm:
         maybe_tqdm = functools.partial(tqdm.tqdm, total=len(df))
     else:
@@ -85,7 +95,7 @@ def download_images_from_dataframe(
 
         destination = row["key"]
         ext = os.path.splitext(destination)[1]
-        expected_ext = os.path.splitext(row["url"].rstrip(" /"))[1]
+        expected_ext = os.path.splitext(row["url"].rstrip("/"))[1]
         if expected_ext and ext.lower() != expected_ext.lower():
             destination += expected_ext
         destination = os.path.join(
