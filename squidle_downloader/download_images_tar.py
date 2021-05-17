@@ -44,6 +44,9 @@ def download_images(
         Whether to convert PNG images to JPEG format. Default is `False`.
     jpeg_quality : int or float, optional
         Quality to use when converting to JPEG. Default is `95`.
+    skip_existing : bool, optional
+        Whether to skip existing outputs. If `False`, an error is raised when
+        the destination already exists. Default is `True`.
     verbose : int, optional
         Verbosity level. Default is `1`.
     use_tqdm : bool, optional
