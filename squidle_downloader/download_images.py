@@ -132,7 +132,7 @@ def download_images_from_dataframe(
             )
         try:
             _, headers = urllib.request.urlretrieve(
-                row["url"].strip(), filename=destination
+                row["url"].strip().replace(" ", "%20"), filename=destination
             )
             n_download += 1
         except BaseException as err:
