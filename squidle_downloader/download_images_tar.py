@@ -107,11 +107,9 @@ def download_images(
             print("{}Existing file {} deleted".format(padding, tar_fname), flush=True)
 
     for i_row, (_, row) in enumerate(maybe_tqdm(df.iterrows())):
-        if (
-            verbose >= 1
-            and not use_tqdm
-            and i_row > 0
-            and (i_row <= 5 or i_row % 100 == 0)
+        if i_row > 0 and (
+            verbose >= 3
+            or (verbose >= 1 and not use_tqdm and (i_row <= 5 or i_row % 100 == 0))
         ):
             t_elapsed = time.time() - t0
             t_remain = t_elapsed / i_row * (len(df) - i_row)

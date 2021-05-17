@@ -85,11 +85,9 @@ def download_images_from_dataframe(
             row["deployment"],
             destination,
         )
-        if (
-            verbose >= 1
-            and not use_tqdm
-            and i_row > 0
-            and (i_row <= 5 or i_row % 100 == 0)
+        if i_row > 0 and (
+            verbose >= 3
+            or (verbose >= 1 and not use_tqdm and (i_row <= 5 or i_row % 100 == 0))
         ):
             t_elapsed = time.time() - t0
             t_remain = t_elapsed / i_row * (len(df) - i_row)
