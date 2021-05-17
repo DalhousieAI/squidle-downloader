@@ -69,6 +69,7 @@ def download_images_from_dataframe(
 
     n_already_downloaded = 0
     n_download = 0
+    n_error = 0
 
     t0 = time.time()
 
@@ -127,36 +128,45 @@ def download_images_from_dataframe(
                 row["url"].strip(), filename=destination
             )
             n_download += 1
-        except BaseException:
+        except BaseException as err:
+            n_error += 1
+            print("{}An error occured while processing {}".format(innerpad, row["url"]))
             if os.path.isfile(destination) and delete_partial:
-                print(
-                    "{}An error occured while processing {}.\n"
-                    "{}Deleting partial file {}".format(
-                        innerpad, row["url"], innerpad, destination
-                    )
-                )
+                print("{}Deleting partial file {}".format(innerpad, destination))
                 os.remove(destination)
+            if isinstance(
+                err,
+                (
+                    ValueError,
+                    urllib.error.ContentTooShortError,
+                    urllib.error.HTTPError,
+                    urllib.error.URLError,
+                ),
+            ):
+                print(err)
+                continue
             raise
 
     if verbose >= 1:
         print(padding + "Finished processing {} images".format(len(df)))
-        if n_download == 0:
-            extra_str = ""
-        else:
-            extra_str = "The remaining {} image{} downloaded.".format(
+        s = "{}{} {} image{} already downloaded.".format(
+            padding,
+            "All" if n_already_downloaded == len(df) else "There were",
+            n_already_downloaded,
+            "" if n_already_downloaded == 1 else "s",
+        )
+        if n_error > 0:
+            s += " There {} {} download error{}.".format(
+                "was" if n_error == 1 else "were",
+                n_error,
+                "" if n_error == 1 else "s",
+            )
+        if n_download > 0:
+            s += " The remaining {} image{} downloaded.".format(
                 n_download,
                 " was" if n_download == 1 else "s were",
             )
-        print(
-            "{}{} {} image{} already downloaded.{}".format(
-                padding,
-                "All" if n_download == 0 else "There were",
-                n_already_downloaded,
-                "" if n_already_downloaded == 1 else "s",
-                extra_str,
-            ),
-            flush=True,
-        )
+        print(s, flush=True)
     return
 
 
