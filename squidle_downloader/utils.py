@@ -187,7 +187,7 @@ def sanitize_filename_series(series, allow_dotfiles=False):
     # \ / : * ? " < > |
     # Other operating systems are more permissive.
     # Replace / with a hyphen
-    series = series.str.replace("/", "-")
+    series = series.str.replace("/", "-", regex=False)
     # Use a blacklist to remove any remaining forbidden characters
-    series = series.str.replace(r'[\/:*?"<>|]+', "")
+    series = series.str.replace(r'[\/:*?"<>|]+', "", regex=True)
     return series
