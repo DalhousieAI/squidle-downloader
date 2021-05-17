@@ -27,6 +27,7 @@ def download_images(
     convert_to_jpeg=False,
     jpeg_quality=95,
     skip_existing=True,
+    return_valid=True,
     verbose=1,
     use_tqdm=True,
     print_indent=0,
@@ -47,6 +48,9 @@ def download_images(
     skip_existing : bool, optional
         Whether to skip existing outputs. If `False`, an error is raised when
         the destination already exists. Default is `True`.
+    return_valid : bool, optional
+        Whether to return a filtered DataFrame containing only rows which were
+        downloaded.
     verbose : int, optional
         Verbosity level. Default is `1`.
     use_tqdm : bool, optional
@@ -58,7 +62,11 @@ def download_images(
 
     Returns
     -------
-    None
+    pandas.DataFrame
+        Like `df`, but with the `key` column changed to the exact basename of
+        the output file within the tarball, including extension. Only entries
+        which could be downloaded are included; URLs which could not be found
+        are omitted.
     """
     padding = " " * print_indent
     innerpad = padding + " " * 4
@@ -68,6 +76,11 @@ def download_images(
             + "Downloading {} images into tarball {}".format(len(df), tar_fname),
             flush=True,
         )
+
+    if return_valid:
+        output_df = pd.DataFrame()
+    else:
+        output_df = None
 
     if verbose >= 2:
         print(
@@ -148,7 +161,10 @@ def download_images(
         ext = os.path.splitext(destination)[1]
         expected_ext = os.path.splitext(row["url"].rstrip("/"))[1]
         if expected_ext and ext.lower() != expected_ext.lower():
-            destination += expected_ext
+            if ext.lower() in {".jpg", ".jpeg"}:
+                destination = os.path.splitext(destination)[0] + expected_ext
+            else:
+                destination = destination + expected_ext
         destination = os.path.join(row["deployment"], destination)
         ext = os.path.splitext(destination)[1]
         if convert_to_jpeg and ext.lower() not in {".jpg", ".jpeg"}:
@@ -157,7 +173,9 @@ def download_images(
         else:
             needs_conversion = False
 
-        with tarfile.open(tar_fname, mode="a") as tar:
+        with tarfile.open(
+            tar_fname, mode="a"
+        ) as tar, tempfile.TemporaryDirectory() as dir_tmp:
             if destination in tar.getnames():
                 if not skip_existing:
                     raise EnvironmentError(
@@ -168,29 +186,27 @@ def download_images(
                 if verbose >= 3:
                     print(innerpad + "Already downloaded {}".format(destination))
                 n_already_downloaded += 1
-                continue
-
-            try:
-                r = requests.get(row["url"].strip(), stream=True)
-            except requests.exceptions.RequestException as err:
-                print("Error handing: {}".format(row["url"]))
-                print(err)
-                n_error += 1
-                continue
-            if r.status_code != 200:
-                if verbose >= 1:
-                    print(
-                        innerpad
-                        + "Bad URL (HTTP Status {}): {}".format(
-                            r.status_code, row["url"]
+            else:
+                try:
+                    r = requests.get(row["url"], stream=True)
+                except requests.exceptions.RequestException as err:
+                    print("Error handing: {}".format(row["url"]))
+                    print(err)
+                    n_error += 1
+                    continue
+                if r.status_code != 200:
+                    if verbose >= 1:
+                        print(
+                            innerpad
+                            + "Bad URL (HTTP Status {}): {}".format(
+                                r.status_code, row["url"]
+                            )
                         )
-                    )
-                n_error += 1
-                continue
+                    n_error += 1
+                    continue
 
-            if verbose >= 3:
-                print(innerpad + "Downloading {}".format(row["url"]))
-            with tempfile.TemporaryDirectory() as dir_tmp:
+                if verbose >= 3:
+                    print(innerpad + "Downloading {}".format(row["url"]))
                 fname_tmp = os.path.join(
                     dir_tmp,
                     os.path.basename(row["url"].rstrip("/")),
@@ -225,7 +241,13 @@ def download_images(
                         + "  Adding {} to archive as {}".format(fname_tmp, destination)
                     )
                 tar.add(fname_tmp, arcname=destination)
-        n_download += 1
+                n_download += 1
+            if return_valid:
+                # Update key to be the actual destination basename
+                row = row.copy()
+                row["key"] = os.path.basename(destination)
+                # Add row to dataframe
+                output_df = output_df.append(row)
 
     if verbose >= 1:
         print(padding + "Finished processing {} images".format(len(df)))
@@ -247,7 +269,7 @@ def download_images(
                 " was" if n_download == 1 else "s were",
             )
         print(s, flush=True)
-    return
+    return output_df
 
 
 def download_images_by_campaign(
@@ -374,9 +396,9 @@ def download_images_by_campaign(
             )
 
         subdf = df.loc[campaign2idx[campaign]]
-        tar_fname = os.path.join(output_dir, campaign + ".tar")
+        tar_fname = os.path.join(output_dir, "tar", campaign + ".tar")
 
-        download_images(
+        outdf = download_images(
             subdf,
             tar_fname,
             skip_existing=skip_existing,
@@ -385,6 +407,10 @@ def download_images_by_campaign(
             print_indent=print_indent + 4,
             **kwargs,
         )
+        # Save CSV output
+        csv_fname = os.path.join(output_dir, "csv", campaign + ".csv")
+        os.makedirs(os.path.dirname(csv_fname), exist_ok=True)
+        outdf.to_csv(csv_fname, index=False)
 
     if verbose >= 1:
         if not using_tqdm:

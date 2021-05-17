@@ -22,6 +22,7 @@ def download_images_from_dataframe(
     df,
     output_dir,
     skip_existing=True,
+    return_valid=True,
     delete_partial=True,
     verbose=1,
     use_tqdm=True,
@@ -39,6 +40,9 @@ def download_images_from_dataframe(
     skip_existing : bool, optional
         Whether to skip downloading files for which the destination already
         exist. Default is `True`.
+    return_valid : bool, optional
+        Whether to return a filtered DataFrame containing only rows which were
+        downloaded.
     delete_partial : bool, optional
         Whether to delete partially downloaded files in the event of an error,
         such as running out of disk space or keyboard interrupt.
@@ -54,12 +58,21 @@ def download_images_from_dataframe(
 
     Returns
     -------
-    None
+    pandas.DataFrame
+        Like `df`, but with the `key` column changed to the exact basename of
+        the output file within the tarball, including extension. Only entries
+        which could be downloaded are included; URLs which could not be found
+        are omitted.
     """
     padding = " " * print_indent
     innerpad = padding + " " * 4
     if verbose >= 1:
         print(padding + "Downloading {} images".format(len(df)), flush=True)
+
+    if return_valid:
+        output_df = pd.DataFrame()
+    else:
+        output_df = None
 
     if verbose >= 2:
         print(
@@ -134,35 +147,45 @@ def download_images_from_dataframe(
                     ),
                     flush=True,
                 )
-            continue
-        if verbose >= 2:
-            print(
-                "{}Downloading {} to {}".format(innerpad, row["url"], destination),
-                flush=True,
-            )
-        try:
-            _, headers = urllib.request.urlretrieve(
-                row["url"].strip().replace(" ", "%20"), filename=destination
-            )
-            n_download += 1
-        except BaseException as err:
-            n_error += 1
-            print("{}An error occured while processing {}".format(innerpad, row["url"]))
-            if os.path.isfile(destination) and delete_partial:
-                print("{}Deleting partial file {}".format(innerpad, destination))
-                os.remove(destination)
-            if isinstance(
-                err,
-                (
-                    ValueError,
-                    urllib.error.ContentTooShortError,
-                    urllib.error.HTTPError,
-                    urllib.error.URLError,
-                ),
-            ):
-                print(err)
-                continue
-            raise
+        else:
+            if verbose >= 2:
+                print(
+                    "{}Downloading {} to {}".format(innerpad, row["url"], destination),
+                    flush=True,
+                )
+            try:
+                _, headers = urllib.request.urlretrieve(
+                    row["url"].strip().replace(" ", "%20"), filename=destination
+                )
+                n_download += 1
+            except BaseException as err:
+                n_error += 1
+                print(
+                    "{}An error occured while processing {}".format(
+                        innerpad, row["url"]
+                    )
+                )
+                if os.path.isfile(destination) and delete_partial:
+                    print("{}Deleting partial file {}".format(innerpad, destination))
+                    os.remove(destination)
+                if isinstance(
+                    err,
+                    (
+                        ValueError,
+                        urllib.error.ContentTooShortError,
+                        urllib.error.HTTPError,
+                        urllib.error.URLError,
+                    ),
+                ):
+                    print(err)
+                    continue
+                raise
+        if return_valid:
+            # Update key to be the actual destination basename
+            row = row.copy()
+            row["key"] = os.path.basename(destination)
+            # Add row to dataframe
+            output_df = output_df.append(row)
 
     if verbose >= 1:
         print(padding + "Finished processing {} images".format(len(df)))
@@ -184,13 +207,14 @@ def download_images_from_dataframe(
                 " was" if n_download == 1 else "s were",
             )
         print(s, flush=True)
-    return
+    return output_df
 
 
 def download_images_from_csv(
     input_csv,
     output_dir,
     *args,
+    output_csv=None,
     skip_existing=True,
     verbose=1,
     i_proc=None,
@@ -206,6 +230,10 @@ def download_images_from_csv(
         Path to CSV file.
     output_dir : str
         Path to output directory.
+    output_csv : str, optional
+        Path to output CSV file, which will have rows containing invalid URLs
+        dropped and columns sanitized to match the output file path.
+        If omitted, no output CSV is generated.
     skip_existing : bool, optional
         Whether to skip downloading files for which the destination already
         exist. Default is `True`.
@@ -276,15 +304,26 @@ def download_images_from_csv(
     )
     if verbose >= 1:
         print("Loaded CSV file in {:.1f} seconds".format(time.time() - t0), flush=True)
-    ret = download_images_from_dataframe(
-        df, output_dir, *args, skip_existing=skip_existing, verbose=verbose, **kwargs
+    output_df = download_images_from_dataframe(
+        df,
+        output_dir,
+        *args,
+        return_valid=(output_csv is not None),
+        skip_existing=skip_existing,
+        verbose=verbose,
+        **kwargs,
     )
+    if output_csv is not None:
+        if verbose >= 1:
+            print("Saving valid CSV rows to {}".format(output_csv))
+        output_df.to_csv(output_csv, index=False)
+
     if verbose >= 1:
         print(
             "Total runtime: {}".format(datetime.timedelta(seconds=time.time() - t0)),
             flush=True,
         )
-    return ret
+    return
 
 
 def get_parser():
@@ -329,6 +368,11 @@ def get_parser():
         "output_dir",
         type=str,
         help="Root directory for downloaded images.",
+    )
+    parser.add_argument(
+        "--output-csv",
+        type=str,
+        help="Output CSV file.",
     )
     parser.add_argument(
         "--no-tqdm",
