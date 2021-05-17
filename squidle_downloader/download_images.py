@@ -74,7 +74,7 @@ def download_images_from_dataframe(
     else:
         output_df = None
 
-    if verbose >= 2:
+    if verbose >= 3:
         print(
             padding + "Sanitizing fields used to build filenames",
             flush=True,

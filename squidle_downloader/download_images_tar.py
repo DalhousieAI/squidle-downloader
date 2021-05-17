@@ -82,7 +82,7 @@ def download_images(
     else:
         output_df = None
 
-    if verbose >= 2:
+    if verbose >= 3:
         print(
             padding + "Sanitizing key and deployment fields",
             flush=True,
