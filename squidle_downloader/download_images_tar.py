@@ -329,16 +329,17 @@ def download_images_by_campaign(
             )
 
     if verbose == 1 and use_tqdm:
+        using_tqdm = True
         maybe_tqdm = tqdm.tqdm
     else:
-        use_tqdm = False
+        using_tqdm = False
         maybe_tqdm = lambda x: x  # noqa: E731
 
     for i_campaign, campaign in enumerate(maybe_tqdm(campaigns_to_process)):
         if not n_proc:
             pass
 
-        if verbose >= 1 and not use_tqdm and i_campaign > 0:
+        if verbose >= 1 and not using_tqdm and i_campaign > 0:
             t_elapsed = time.time() - t0
             t_remain = t_elapsed / i_campaign * (n_to_process - i_campaign)
             print(
@@ -352,7 +353,7 @@ def download_images_by_campaign(
                     datetime.timedelta(seconds=t_remain),
                 )
             )
-        if verbose >= 1 and not use_tqdm:
+        if verbose >= 1 and not using_tqdm:
             print(
                 '{}Processing campaign "{}" ({}/{})'.format(
                     padding, campaign, i_campaign, len(campaign2idx)
