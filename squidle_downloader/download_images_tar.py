@@ -355,8 +355,8 @@ def download_images_by_campaign(
             )
         if verbose >= 1 and not using_tqdm:
             print(
-                '{}Processing campaign "{}" ({}/{})'.format(
-                    padding, campaign, i_campaign, len(campaign2idx)
+                '\n{}Processing campaign "{}" ({}/{})'.format(
+                    padding, campaign, i_campaign + 1, n_to_process
                 ),
                 flush=True,
             )
@@ -375,6 +375,8 @@ def download_images_by_campaign(
         )
 
     if verbose >= 1:
+        if not using_tqdm:
+            print()
         print(
             "Processed {} campaigns in {}".format(
                 n_to_process,
