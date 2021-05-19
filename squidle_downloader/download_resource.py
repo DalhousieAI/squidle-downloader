@@ -344,10 +344,11 @@ def cached_download_paginated(
 
     # Re-download the last page downloaded. This is case more content was
     # added and this is now only part of the last page.
+    if n_pages_to_load > 0:
+        existing_n_records_last = df["id"].iloc[-1]
     if verbose >= 1:
         if n_pages_to_load > 0:
             print("Re-downloading last cached page, to check for updates", flush=True)
-            existing_n_records_last = df["id"].iloc[-1]
         else:
             print("Downloading first page", flush=True)
     page = max(1, n_pages_to_load)
