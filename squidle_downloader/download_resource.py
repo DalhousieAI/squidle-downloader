@@ -266,10 +266,7 @@ def cached_download_paginated(
     """
     base_url = utils.build_base_url(subdomain)
     url = base_url + "/api/" + resource
-    params = {
-        "q": json.dumps({"order_by": [{"field": "id", "direction": "asc"}]}),
-        "results_per_page": 10_000,
-    }
+    results_per_page = 10_000
 
     if verbose >= 1:
         print(
@@ -290,17 +287,37 @@ def cached_download_paginated(
         if max_pages is not None:
             n_pages_to_load = min(n_pages_to_load, max_pages)
 
-    def cached_dl_single(page, return_npage=False, _force=False):
-        fname = get_cache_path(resource, cache_dir, subdomain=subdomain, page=page)
+    def cached_dl_single(
+        page, last_id=None, n_request=results_per_page, return_npage=False, _force=False
+    ):
+
+        params = {
+            "q": {"order_by": [{"field": "id", "direction": "asc"}]},
+            "results_per_page": n_request,
+            "page": 1,
+        }
+        if last_id is not None:
+            params["q"]["filters"] = [{"name": "id", "op": ">", "val": int(last_id)}]
+
+        if page is not None:
+            fname = get_cache_path(resource, cache_dir, subdomain=subdomain, page=page)
         n_page = None
-        if not _force and os.path.isfile(fname):
+        if not _force and page is not None and os.path.isfile(fname):
             df = pd.read_csv(fname)
         else:
-            params["page"] = page
+            params["q"] = json.dumps(params["q"])
             result = requests.get(url, params=params).json()
+            if "objects" not in result:
+                raise EnvironmentError(
+                    "Invalid request."
+                    "\n    url: {}"
+                    "\n    params: {}"
+                    "\n    result: {}".format(url, params, result)
+                )
             n_page = result["total_pages"]
             df = utils.clean_df(pd.json_normalize(result["objects"]))
-            df.to_csv(fname, index=False)
+            if page is not None:
+                df.to_csv(fname, index=False)
         if return_npage:
             return df, n_page
         else:
@@ -324,59 +341,73 @@ def cached_download_paginated(
         for page in _range(1, n_pages_to_load + 1):
             dfs.append(cached_dl_single(page))
 
-    if max_pages is not None and n_pages_to_load >= max_pages:
-        # Assume our cache is up-to-date
+    if len(dfs) > 0 and len(dfs[-1]) < results_per_page:
+        # The last page we have cached is only partially present.
+        # Try to fill it out with more data.
+        last_id = dfs[-1]["id"].iloc[-1]
+        if verbose >= 1:
+            print("Checking for more content to add to page {}".format(len(dfs)))
+        df = cached_dl_single(
+            None, last_id=last_id, n_request=results_per_page - len(dfs[-1])
+        )
+        if len(df) > 0:
+            if verbose >= 1:
+                print("  Adding extra {} rows to page {}".format(len(df), len(dfs)))
+            # Update the last dataframe to include these extra records to get
+            # it up to size
+            dfs[-1] = dfs[-1].append(df, ignore_index=True)
+            # Cache the expanded copy of this page
+            fname = get_cache_path(
+                resource, cache_dir, subdomain=subdomain, page=len(dfs)
+            )
+            dfs[-1].to_csv(fname, index=False)
+        elif verbose >= 1:
+            print("  No extra content")
+        if len(df) == 0 or len(dfs[-1]) < results_per_page:
+            # No more records to parse
+            stacked_df = pd.concat(dfs, ignore_index=True)
+            is_updated = dfs[-1]["id"].iloc[-1] != last_id
+            if return_updated:
+                return stacked_df, is_updated
+            return stacked_df
+
+    if max_pages is not None and len(dfs) >= max_pages:
         stacked_df = pd.concat(dfs, ignore_index=True)
         if return_updated:
             return stacked_df, False
         return stacked_df
 
-    # Re-download the last page downloaded. This is case more content was
-    # added and this is now only part of the last page.
-    if n_pages_to_load > 0:
-        existing_n_records_last = dfs[-1]["id"].iloc[-1]
+    page = len(dfs) + 1
     if verbose >= 1:
-        if n_pages_to_load > 0:
-            print("Re-downloading last cached page, to check for updates", flush=True)
-        else:
-            print("Downloading first page", flush=True)
-    page = max(1, n_pages_to_load)
-    df, n_page = cached_dl_single(page, return_npage=True, _force=True)
-    if not dfs or n_pages_to_load == 1:
-        dfs = [df]
-    else:
-        # Overwrite existing download of last page
-        dfs[-1] = df
+        print("Downloading page {}/?".format(page), flush=True)
+    last_id = dfs[-1]["id"].iloc[-1] if len(dfs) > 0 else None
+    df, n_page = cached_dl_single(
+        page, last_id=last_id, return_npage=True, _force=force
+    )
+    dfs.append(df)
+    n_page += page - 1
 
     # Limit to only the pages we were asked to download
     if max_pages is not None:
         n_page = min(n_page, max_pages)
 
-    if page >= n_page:
-        # The last page loaded is the total number of pages in the database,
-        # so we are done.
-        stacked_df = pd.concat(dfs, ignore_index=True)
-        if not return_updated:
-            return stacked_df
-        if existing_n_records_last == df["id"].iloc[-1]:
-            return stacked_df, False
-        else:
-            return stacked_df, True
-
     prior_page = page
 
-    if verbose >= 1:
-        print(
-            "Downloading remaining {}/{} {}pages".format(
-                n_page - prior_page,
-                n_page,
-                "" if max_pages is None else "requested ",
-            ),
-            flush=True,
-        )
-    # Load remaining pages, saving them to the cache
-    for page in _range(prior_page + 1, n_page + 1):
-        dfs.append(cached_dl_single(page))
+    if page < n_page:
+        if verbose >= 1:
+            print(
+                "Downloading remaining {}/{} {}pages".format(
+                    n_page - prior_page,
+                    n_page,
+                    "" if max_pages is None else "requested ",
+                ),
+                flush=True,
+            )
+        # Load remaining pages, saving them to the cache
+        for page in _range(prior_page + 1, n_page + 1):
+            dfs.append(
+                cached_dl_single(page, last_id=dfs[-1]["id"].iloc[-1], _force=force)
+            )
 
     stacked_df = pd.concat(dfs, ignore_index=True)
 
