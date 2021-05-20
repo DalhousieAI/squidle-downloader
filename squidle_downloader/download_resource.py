@@ -416,7 +416,7 @@ def cached_download_paginated(
     return stacked_df
 
 
-def cached_download(resource, cache_dir, pagination="auto", max_pages=None, **kwargs):
+def cached_download(resource, cache_dir, pagination=True, max_pages=None, **kwargs):
     """
     Download the entirety of a resource from SQUIDLE, caching each result page.
 
@@ -427,11 +427,9 @@ def cached_download(resource, cache_dir, pagination="auto", max_pages=None, **kw
         `"deployment"`, `"media"`, `"pose"`).
     cache_dir : str
         Path to cache directory.
-    pagination : bool or "auto", optional
+    pagination : bool, optional
         Whether to save the cache with each page cached separately. Otherwise,
-        the whole resource is cached as a single file. If `"auto"` (default),
-        pagination is used unless the resource is either `"platform"` or
-        `"campaign"`.
+        the whole resource is cached as a single file. Default is `True`.
     max_pages : int or None, optional
         Maximum number of pages to download. If `None` (default), all pages are
         downloaded.
@@ -450,8 +448,6 @@ def cached_download(resource, cache_dir, pagination="auto", max_pages=None, **kw
     pandas.DataFrame
         Output dataset.
     """
-    if pagination == "auto":
-        pagination = resource not in {"platform", "campaign"}
     if pagination:
         return cached_download_paginated(
             resource, cache_dir, max_pages=max_pages, **kwargs
