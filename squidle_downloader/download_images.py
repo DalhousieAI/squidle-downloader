@@ -299,6 +299,13 @@ def download_images_from_csv(
             print("Existing outputs will be skipped.")
         else:
             print("Existing outputs will be overwritten.")
+        if output_csv:
+            print(
+                "An output CSV file containing only the valid URLs will be"
+                " created at {}".format(output_csv)
+            )
+            if os.path.isfile(output_csv):
+                print("The existing file {} will be overwritten.".format(output_csv))
         print("Reading CSV file ({})...".format(utils.file_size(input_csv)), flush=True)
     df = pd.read_csv(
         input_csv,
