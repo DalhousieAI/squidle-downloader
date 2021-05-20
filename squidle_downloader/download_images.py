@@ -22,6 +22,7 @@ def download_images_from_dataframe(
     df,
     output_dir,
     skip_existing=True,
+    inplace=True,
     delete_partial=True,
     verbose=1,
     use_tqdm=True,
@@ -39,6 +40,9 @@ def download_images_from_dataframe(
     skip_existing : bool, optional
         Whether to skip downloading files for which the destination already
         exist. Default is `True`.
+    inplace : bool, optional
+        Whether operations on `df` can be performed in place. Default is
+        `True`.
     delete_partial : bool, optional
         Whether to delete partially downloaded files in the event of an error,
         such as running out of disk space or keyboard interrupt.
@@ -64,6 +68,9 @@ def download_images_from_dataframe(
     innerpad = padding + " " * 4
     if verbose >= 1:
         print(padding + "Downloading {} images".format(len(df)), flush=True)
+
+    if not inplace:
+        df = df.copy
 
     if verbose >= 3:
         print(

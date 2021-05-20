@@ -28,6 +28,7 @@ def download_images(
     jpeg_quality=95,
     skip_existing=True,
     error_stream=None,
+    inplace=True,
     verbose=1,
     use_tqdm=True,
     print_indent=0,
@@ -52,6 +53,9 @@ def download_images(
         A text stream where errors should be recorded. If provided, all URLs
         which could not be downloaded due to an error will be written to this
         stream, separated by `"\n"` characters.
+    inplace : bool, optional
+        Whether operations on `df` can be performed in place. Default is
+        `True`.
     verbose : int, optional
         Verbosity level. Default is `1`.
     use_tqdm : bool, optional
@@ -77,6 +81,9 @@ def download_images(
             + "Downloading {} images into tarball {}".format(len(df), tar_fname),
             flush=True,
         )
+
+    if not inplace:
+        df = df.copy
 
     if verbose >= 3:
         print(
