@@ -28,7 +28,6 @@ def download_images(
     jpeg_quality=95,
     skip_existing=True,
     error_stream=None,
-    return_valid=True,
     verbose=1,
     use_tqdm=True,
     print_indent=0,
@@ -53,9 +52,6 @@ def download_images(
         A text stream where errors should be recorded. If provided, all URLs
         which could not be downloaded due to an error will be written to this
         stream, separated by `"\n"` characters.
-    return_valid : bool, optional
-        Whether to return a filtered DataFrame containing only rows which were
-        downloaded.
     verbose : int, optional
         Verbosity level. Default is `1`.
     use_tqdm : bool, optional
@@ -81,11 +77,6 @@ def download_images(
             + "Downloading {} images into tarball {}".format(len(df), tar_fname),
             flush=True,
         )
-
-    if return_valid:
-        output_df = pd.DataFrame()
-    else:
-        output_df = None
 
     if verbose >= 3:
         print(
@@ -133,7 +124,8 @@ def download_images(
         if verbose >= 1:
             print("{}Existing file {} deleted".format(padding, tar_fname), flush=True)
 
-    for i_row, (_, row) in enumerate(maybe_tqdm(df.iterrows())):
+    is_valid = np.zeros(len(df), dtype=bool)
+    for i_row, (index, row) in enumerate(maybe_tqdm(df.iterrows())):
         if pd.isna(row["url"]) or row["url"] == "":
             n_error += 1
             if verbose >= 2:
@@ -253,12 +245,11 @@ def download_images(
                     )
                 tar.add(fname_tmp, arcname=destination)
                 n_download += 1
-            if return_valid:
-                # Update key to be the actual destination basename
-                row = row.copy()
-                row["key"] = os.path.basename(destination)
-                # Add row to dataframe
-                output_df = output_df.append(row)
+
+            # Record that this row was successfully downloaded
+            is_valid[i_row] = True
+            # Update this row's key to be the actual destination basename
+            df.at[index, "key"] = os.path.basename(destination)
 
     if verbose >= 1:
         print(padding + "Finished processing {} images.".format(len(df)))
@@ -296,7 +287,9 @@ def download_images(
             messages.append(s)
         if messages:
             print(padding + " ".join(messages), flush=True)
-    return output_df
+
+    # Remove invalid rows
+    return df.loc[is_valid]
 
 
 def download_images_by_campaign(

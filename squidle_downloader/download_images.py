@@ -22,7 +22,6 @@ def download_images_from_dataframe(
     df,
     output_dir,
     skip_existing=True,
-    return_valid=True,
     delete_partial=True,
     verbose=1,
     use_tqdm=True,
@@ -40,9 +39,6 @@ def download_images_from_dataframe(
     skip_existing : bool, optional
         Whether to skip downloading files for which the destination already
         exist. Default is `True`.
-    return_valid : bool, optional
-        Whether to return a filtered DataFrame containing only rows which were
-        downloaded.
     delete_partial : bool, optional
         Whether to delete partially downloaded files in the event of an error,
         such as running out of disk space or keyboard interrupt.
@@ -69,11 +65,6 @@ def download_images_from_dataframe(
     if verbose >= 1:
         print(padding + "Downloading {} images".format(len(df)), flush=True)
 
-    if return_valid:
-        output_df = pd.DataFrame()
-    else:
-        output_df = None
-
     if verbose >= 3:
         print(
             padding + "Sanitizing fields used to build filenames",
@@ -96,7 +87,8 @@ def download_images_from_dataframe(
 
     t0 = time.time()
 
-    for i_row, row in maybe_tqdm(df.iterrows()):
+    is_valid = np.zeros(len(df), dtype=bool)
+    for i_row, (index, row) in enumerate(maybe_tqdm(df.iterrows())):
         if pd.isna(row["url"]) or row["url"] == "":
             n_error += 1
             if verbose >= 2:
@@ -180,12 +172,11 @@ def download_images_from_dataframe(
                     print(err)
                     continue
                 raise
-        if return_valid:
-            # Update key to be the actual destination basename
-            row = row.copy()
-            row["key"] = os.path.basename(destination)
-            # Add row to dataframe
-            output_df = output_df.append(row)
+
+        # Record that this row was successfully downloaded
+        is_valid[i_row] = True
+        # Update this row's key to be the actual destination basename
+        df.at[index, "key"] = os.path.basename(destination)
 
     if verbose >= 1:
         print(padding + "Finished processing {} images.".format(len(df)))
@@ -223,7 +214,9 @@ def download_images_from_dataframe(
             messages.append(s)
         if messages:
             print(padding + " ".join(messages), flush=True)
-    return output_df
+
+    # Remove invalid rows
+    return df.loc[is_valid]
 
 
 def download_images_from_csv(
@@ -324,7 +317,6 @@ def download_images_from_csv(
         df,
         output_dir,
         *args,
-        return_valid=(output_csv is not None),
         skip_existing=skip_existing,
         verbose=verbose,
         **kwargs,
