@@ -137,9 +137,7 @@ def build_dataset(cache_dir, subdomain="", max_pages=None, force=False, verbose=
     df = df[df["url"] != ""]
 
     # Remove trailing whitespace from string fields
-    for col in ["url", "key", "campaign", "platform"]:
-        if col in df.columns:
-            df[col] = df[col].str.strip()
+    df = utils.clean_df(df)
 
     return df
 

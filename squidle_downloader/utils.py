@@ -71,8 +71,9 @@ def clean_df(df, inplace=True):
     """
     if not inplace:
         df = df.copy()
-    if "media_path" in df.columns:
-        df["media_path"] = df["media_path"].str.strip()
+    for column in ["media_path", "url", "key", "deployment", "campaign", "platform"]:
+        if column in df.columns:
+            df[column] = df[column].str.strip()
     return df
 
 
