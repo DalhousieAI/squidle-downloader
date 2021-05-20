@@ -77,12 +77,12 @@ def download_resource(resource, subdomain="", max_pages=None, verbose=1):
     else:
         _range = range
 
+    dfs = [df]
     for page in _range(2, n_page + 1):
         params["page"] = page
         result = requests.get(url, params=params).json()
-        df = df.append(
-            utils.clean_df(pd.json_normalize(result["objects"])), ignore_index=True
-        )
+        dfs.append(pd.json_normalize(result["objects"]))
+    df = utils.clean_df(pd.concat(dfs, ignore_index=True))
 
     return df
 
@@ -311,7 +311,7 @@ def cached_download_paginated(
     else:
         _range = range
 
-    stacked_df = None
+    dfs = []
     if n_pages_to_load > 0:
         if verbose >= 1:
             print(
@@ -322,22 +322,11 @@ def cached_download_paginated(
             )
 
         for page in _range(1, n_pages_to_load + 1):
-            df = cached_dl_single(page)
-            if stacked_df is None:
-                stacked_df = df
-            elif page >= n_pages_to_load:
-                # Don't add the final page yet, because this file may be out of
-                # date. We sort by records id, which should only ever increase
-                # in the database.
-                pass
-            else:
-                stacked_df = stacked_df.append(df, ignore_index=True)
+            dfs.append(cached_dl_single(page))
 
     if max_pages is not None and n_pages_to_load >= max_pages:
         # Assume our cache is up-to-date
-        if page > 1:
-            # Add the final page
-            stacked_df = stacked_df.append(df, ignore_index=True)
+        stacked_df = pd.concat(dfs, ignore_index=True)
         if return_updated:
             return stacked_df, False
         return stacked_df
@@ -345,7 +334,7 @@ def cached_download_paginated(
     # Re-download the last page downloaded. This is case more content was
     # added and this is now only part of the last page.
     if n_pages_to_load > 0:
-        existing_n_records_last = df["id"].iloc[-1]
+        existing_n_records_last = dfs[-1]["id"].iloc[-1]
     if verbose >= 1:
         if n_pages_to_load > 0:
             print("Re-downloading last cached page, to check for updates", flush=True)
@@ -353,10 +342,11 @@ def cached_download_paginated(
             print("Downloading first page", flush=True)
     page = max(1, n_pages_to_load)
     df, n_page = cached_dl_single(page, return_npage=True, _force=True)
-    if stacked_df is None or n_pages_to_load == 1:
-        stacked_df = df
+    if not dfs or n_pages_to_load == 1:
+        dfs = [df]
     else:
-        stacked_df = stacked_df.append(df, ignore_index=True)
+        # Overwrite existing download of last page
+        dfs[-1] = df
 
     # Limit to only the pages we were asked to download
     if max_pages is not None:
@@ -365,6 +355,7 @@ def cached_download_paginated(
     if page >= n_page:
         # The last page loaded is the total number of pages in the database,
         # so we are done.
+        stacked_df = pd.concat(dfs, ignore_index=True)
         if not return_updated:
             return stacked_df
         if existing_n_records_last == df["id"].iloc[-1]:
@@ -385,8 +376,9 @@ def cached_download_paginated(
         )
     # Load remaining pages, saving them to the cache
     for page in _range(prior_page + 1, n_page + 1):
-        df = cached_dl_single(page)
-        stacked_df = stacked_df.append(df, ignore_index=True)
+        dfs.append(cached_dl_single(page))
+
+    stacked_df = pd.concat(dfs, ignore_index=True)
 
     if return_updated:
         return stacked_df, True
