@@ -259,7 +259,11 @@ def download_images(
             df.at[index, "key"] = os.path.basename(destination)
 
     if verbose >= 1:
-        print(padding + "Finished processing {} images.".format(len(df)))
+        print(
+            "{}Finished processing {} images in {}.".format(
+                padding, len(df), datetime.timedelta(seconds=time.time() - t0)
+            )
+        )
         messages = []
         if n_already_downloaded > 0:
             s = ""
