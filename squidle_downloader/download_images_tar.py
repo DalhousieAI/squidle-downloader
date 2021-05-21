@@ -149,7 +149,10 @@ def download_images(
             or (verbose >= 1 and not use_tqdm and (i_row <= 5 or i_row % 100 == 0))
         ):
             t_elapsed = time.time() - t0
-            t_remain = t_elapsed / i_row * (len(df) - i_row)
+            if n_download > 0:
+                t_remain = t_elapsed / n_download * (len(df) - i_row)
+            else:
+                t_remain = t_elapsed / i_row * (len(df) - i_row)
             print(
                 "{}Processed {:4d}/{} urls ({:6.2f}%) in {} (approx. {} remaining)"
                 "".format(
