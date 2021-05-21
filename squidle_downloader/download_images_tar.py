@@ -109,8 +109,8 @@ def download_images(
     os.makedirs(os.path.dirname(tar_fname), exist_ok=True)
 
     try:
-        with tarfile.open(tar_fname, mode="a") as tar:
-            pass
+        with tarfile.open(tar_fname, mode="r") as tar:
+            contents = tar.getnames()
     except tarfile.ReadError:
         t_wait = 5
         if verbose >= 1:
@@ -130,6 +130,7 @@ def download_images(
         os.remove(tar_fname)
         if verbose >= 1:
             print("{}Existing file {} deleted".format(padding, tar_fname), flush=True)
+        contents = {}
 
     is_valid = np.zeros(len(df), dtype=bool)
     for i_row, (index, row) in enumerate(maybe_tqdm(df.iterrows())):
@@ -182,49 +183,46 @@ def download_images(
         else:
             needs_conversion = False
 
-        with tarfile.open(
-            tar_fname, mode="a"
-        ) as tar, tempfile.TemporaryDirectory() as dir_tmp:
-            if destination in tar.getnames():
-                if not skip_existing:
-                    raise EnvironmentError(
-                        "Destination {} already exists within {}".format(
-                            destination, tar_fname
+        if destination in contents:
+            if not skip_existing:
+                raise EnvironmentError(
+                    "Destination {} already exists within {}".format(
+                        destination, tar_fname
+                    )
+                )
+            if verbose >= 3:
+                print(innerpad + "Already downloaded {}".format(destination))
+            n_already_downloaded += 1
+        else:
+            try:
+                r = requests.get(row["url"], stream=True)
+            except requests.exceptions.RequestException as err:
+                print("Error handing: {}".format(row["url"]))
+                print(err)
+                n_error += 1
+                if error_stream:
+                    error_stream.write(row["url"] + "\n")
+                continue
+            if r.status_code != 200:
+                if verbose >= 1:
+                    print(
+                        innerpad
+                        + "Bad URL (HTTP Status {}): {}".format(
+                            r.status_code, row["url"]
                         )
                     )
-                if verbose >= 3:
-                    print(innerpad + "Already downloaded {}".format(destination))
-                n_already_downloaded += 1
-            else:
-                try:
-                    r = requests.get(row["url"], stream=True)
-                except requests.exceptions.RequestException as err:
-                    print("Error handing: {}".format(row["url"]))
-                    print(err)
-                    n_error += 1
-                    if error_stream:
-                        error_stream.write(row["url"] + "\n")
-                    continue
-                if r.status_code != 200:
-                    if verbose >= 1:
-                        print(
-                            innerpad
-                            + "Bad URL (HTTP Status {}): {}".format(
-                                r.status_code, row["url"]
-                            )
-                        )
-                    n_error += 1
-                    if error_stream:
-                        error_stream.write(row["url"] + "\n")
-                    continue
+                n_error += 1
+                if error_stream:
+                    error_stream.write(row["url"] + "\n")
+                continue
 
+            with tempfile.TemporaryDirectory() as dir_tmp:
                 if verbose >= 3:
                     print(innerpad + "Downloading {}".format(row["url"]))
                 fname_tmp = os.path.join(
                     dir_tmp,
                     os.path.basename(row["url"].rstrip("/")),
                 )
-
                 with open(fname_tmp, "wb") as f:
                     for chunk in r:
                         f.write(chunk)
@@ -253,13 +251,15 @@ def download_images(
                         innerpad
                         + "  Adding {} to archive as {}".format(fname_tmp, destination)
                     )
-                tar.add(fname_tmp, arcname=destination)
+                with tarfile.open(tar_fname, mode="a") as tar:
+                    contents = tar.getnames()
+                    tar.add(fname_tmp, arcname=destination)
                 n_download += 1
 
-            # Record that this row was successfully downloaded
-            is_valid[i_row] = True
-            # Update this row's key to be the actual destination basename
-            df.at[index, "key"] = os.path.basename(destination)
+        # Record that this row was successfully downloaded
+        is_valid[i_row] = True
+        # Update this row's key to be the actual destination basename
+        df.at[index, "key"] = os.path.basename(destination)
 
     if verbose >= 1:
         print(
