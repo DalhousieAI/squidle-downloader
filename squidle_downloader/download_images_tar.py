@@ -73,6 +73,8 @@ def download_images(
         which could be downloaded are included; URLs which could not be found
         are omitted.
     """
+    t0 = time.time()
+
     padding = " " * print_indent
     innerpad = padding + " " * 4
     if verbose >= 1:
@@ -104,10 +106,7 @@ def download_images(
     n_download = 0
     n_error = 0
 
-    t0 = time.time()
-
     os.makedirs(os.path.dirname(tar_fname), exist_ok=True)
-
     contents = {}
     if os.path.exists(tar_fname):
         try:
@@ -135,6 +134,8 @@ def download_images(
                     "{}Existing file {} deleted".format(padding, tar_fname), flush=True
                 )
 
+    t1 = time.time()
+
     is_valid = np.zeros(len(df), dtype=bool)
     for i_row, (index, row) in enumerate(maybe_tqdm(df.iterrows())):
         if pd.isna(row["url"]) or row["url"] == "":
@@ -152,7 +153,7 @@ def download_images(
             verbose >= 3
             or (verbose >= 1 and not use_tqdm and (i_row <= 5 or i_row % 100 == 0))
         ):
-            t_elapsed = time.time() - t0
+            t_elapsed = time.time() - t1
             if n_download > 0:
                 t_remain = t_elapsed / n_download * (len(df) - i_row)
             else:
