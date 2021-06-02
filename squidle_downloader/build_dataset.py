@@ -160,6 +160,8 @@ def build_dataset_multidomain(cache_dir, subdomains=("", "soi"), verbose=1, **kw
         overwriting them.
     verbose : int, optional
         Verbosity level. Default is ``1``.
+    **kwargs
+        Additional arguments as per ``build_dataset``.
 
     Returns
     -------
@@ -218,6 +220,8 @@ def dataset_multidomain_to_csv(destination, *args, verbose=1, **kwargs):
         overwriting them.
     verbose : int, optional
         Verbosity level. Default is ``1``.
+    **kwargs
+        Additional arguments as per ``build_dataset``.
 
     Returns
     -------
