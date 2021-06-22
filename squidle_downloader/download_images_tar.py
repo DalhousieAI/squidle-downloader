@@ -228,7 +228,7 @@ def download_images(
                     os.path.basename(row["url"].rstrip("/")),
                 )
                 with open(fname_tmp, "wb") as f:
-                    for chunk in r:
+                    for chunk in r.iter_content(chunk_size=1048576):
                         f.write(chunk)
                 if verbose >= 4:
                     print(innerpad + "  Wrote to {}".format(fname_tmp))
