@@ -349,7 +349,7 @@ def get_parser():
 
 def main():
     """
-    Run command line interface for downloading 3x3 labelled images.
+    Run command line interface for building a dataset of unlabelled SQUIDLE images.
     """
     parser = get_parser()
     kwargs = vars(parser.parse_args())
