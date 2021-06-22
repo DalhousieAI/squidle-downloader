@@ -14,7 +14,9 @@ import pandas as pd
 from . import __meta__, download_resource, utils
 
 
-def build_dataset(cache_dir, subdomain="", max_pages=None, force=False, verbose=1):
+def build_dataset(
+    cache_dir, subdomain="", max_pages=None, force=False, fix_urls=True, verbose=1
+):
     """
     Build an unlabelled dataset of images on a SQUIDLE subdomain.
 
@@ -30,6 +32,9 @@ def build_dataset(cache_dir, subdomain="", max_pages=None, force=False, verbose=
     force : bool, optional
         Whether to ignore existing cached files, downloading from scratch and
         overwriting them.
+    fix_urls : bool, optional
+        Whether to fix broken URLs which can be fixed by changing the URL to a
+        different source for the same image. Default is `True`.
     verbose : int, optional
         Verbosity level. Default is ``1``.
 
@@ -138,6 +143,99 @@ def build_dataset(cache_dir, subdomain="", max_pages=None, force=False, verbose=
 
     # Remove trailing whitespace from string fields
     df = utils.clean_df(df)
+
+    # Fix broken URLs, where possible
+    if fix_urls:
+        df = fix_broken_urls(df)
+
+    return df
+
+
+def fix_broken_urls(df, inplace=True):
+    """
+    Fix broken URLs within the dataset, where possible.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Input dataset.
+    inplace : bool, optional
+        Whether operations on `df` can be performed in place. Default is
+        `True`.
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        Like input dataset, but with
+    """
+    # Fix broken deployment links in Tasmania201707
+    is_fixable = (df["campaign"] == "Tasmania201707") & (
+        (df["deployment"] == "SS22_waterfall_transect")
+        | (df["deployment"] == "r20170716_215129_SS22_waterfall_transect")
+    )
+    if any(is_fixable):
+        if not inplace:
+            df = df.copy()
+            inplace = True
+        f = (
+            lambda x: x.replace(
+                "/IMOS/AUV/auv_viewer_data/images/Tasmania201707/r20170716_215129_SS22_waterfall_transect/full_res/",
+                "/IMOS/AUV/Tasmania201707/r20170716_215129_SS22_waterfall_transect/i20170716_215129_gtif/",
+                1,
+            )[:-4]
+            + ".tif"
+        )
+        df.loc[is_fixable, "url"] = df.loc[is_fixable, "url"].apply(f)
+
+    # Fix broken deployment links in Ningaloo201203
+    is_fixable = (df["campaign"] == "Ningaloo201203") & (
+        (df["deployment"] == "n04_muiron_grids_shallow_auv1")
+        | (df["deployment"] == "r20120304_003716_n04_muiron_grids_shallow_auv1")
+    )
+    if any(is_fixable):
+        if not inplace:
+            df = df.copy()
+            inplace = True
+        f = (
+            lambda x: x.replace(
+                "/IMOS/AUV/auv_viewer_data/images/Ningaloo201203/r20120304_003716_n04_muiron_grids_shallow_auv1/full_res/",
+                "/IMOS/AUV/Ningaloo201203/r20120304_003716_n04_muiron_grids_shallow_auv1/i20120304_003716_gtif/",
+                1,
+            )[:-4]
+            + ".tif"
+        )
+        df.loc[is_fixable, "url"] = df.loc[is_fixable, "url"].apply(f)
+
+    # Fix 5 broken links in WA201004
+    is_fixable = (
+        (df["campaign"] == "WA201004")
+        & (
+            (df["deployment"] == "rottnest_03_25m_s_out")
+            | (df["deployment"] == "r20100421_022145_rottnest_03_25m_s_out")
+        )
+        & df["key"].isin(
+            {
+                "PR_20100421_024325_086_LC16",
+                "PR_20100421_030447_153_LC16",
+                "PR_20100421_030747_081_LC16",
+                "PR_20100421_032417_864_LC16",
+                "PR_20100421_033429_084_LC16",
+            }
+        )
+    )
+    if any(is_fixable):
+        if not inplace:
+            df = df.copy()
+            inplace = True
+        f = (
+            lambda x: x.replace(
+                "/IMOS/AUV/auv_viewer_data/images/WA201004/r20100421_022145_rottnest_03_25m_s_out/full_res/",
+                "/IMOS/AUV/WA201004/r20100421_022145_rottnest_03_25m_s_out/i20100421_022145_gtif/",
+                1,
+            )[:-4]
+            + ".tif"
+        )
+        df.loc[is_fixable, "url"] = df.loc[is_fixable, "url"].apply(f)
 
     return df
 
@@ -321,6 +419,15 @@ def get_parser():
             " subdomain. Each page contains ten thousand records. By default,"
             " all pages are downloaded."
         ),
+    )
+    parser.add_argument(
+        "--no-fixup",
+        dest="fix_urls",
+        action="store_false",
+        help="""
+            Leave URLs as per the original metadata, without fixing URLs
+            which are known to be broken but fixable.
+        """,
     )
     parser.add_argument(
         "--verbose",
