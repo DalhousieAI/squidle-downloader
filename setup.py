@@ -182,6 +182,7 @@ setup(
         "console_scripts": [
             "squidle-build-dataset=squidle_downloader.build_dataset:main",
             "squidle-build-schema=squidle_downloader.build_schema:main",
+            "squidle-download-annotations=squidle_downloader.download_annotations:main",
             "squidle-download-3x3=squidle_downloader.download_3x3:main",
             "squidle-download-images=squidle_downloader.download_images:main",
             "squidle-download-images-tar=squidle_downloader.download_images_tar:main",

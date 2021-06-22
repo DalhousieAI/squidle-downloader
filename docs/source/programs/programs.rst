@@ -6,6 +6,7 @@ CLI Reference
 
     build_dataset
     build_schema
+    download_annotations
     download_resource
     download_3x3
     download_images
