@@ -93,6 +93,7 @@ def download_images(
             flush=True,
         )
     df["deployment"] = utils.sanitize_filename_series(df["deployment"])
+    df["deployment_key"] = utils.sanitize_filename_series(df["deployment_key"])
     df["key"] = utils.sanitize_filename_series(df["key"])
     df["url"] = df["url"].str.strip()
 
@@ -179,7 +180,7 @@ def download_images(
                 destination = os.path.splitext(destination)[0] + expected_ext
             else:
                 destination = destination + expected_ext
-        destination = os.path.join(row["deployment"], destination)
+        destination = os.path.join(row["deployment_key"], destination)
         ext = os.path.splitext(destination)[1]
         if convert_to_jpeg and ext.lower() not in {".jpg", ".jpeg"}:
             needs_conversion = True

@@ -81,6 +81,7 @@ def download_images_from_dataframe(
         )
     df["campaign"] = utils.sanitize_filename_series(df["campaign"])
     df["deployment"] = utils.sanitize_filename_series(df["deployment"])
+    df["deployment_key"] = utils.sanitize_filename_series(df["deployment_key"])
     df["key"] = utils.sanitize_filename_series(df["key"])
     df["url"] = df["url"].str.strip()
 
@@ -115,7 +116,7 @@ def download_images_from_dataframe(
         destination = os.path.join(
             output_dir,
             row["campaign"],
-            row["deployment"],
+            row["deployment_key"],
             destination,
         )
         if i_row > n_error and (
