@@ -225,17 +225,16 @@ def download_annotation_sets(
                 )
             )
 
-    if verbose == 1 and use_tqdm:
-        maybe_tqdm = functools.partial(tqdm.tqdm, total=len(annotation_sets))
-    else:
+    if verbose != 1:
         use_tqdm = False
-        maybe_tqdm = lambda x: x  # noqa: E731
 
     n_download = 0
     n_error = 0
     t1 = time.time()
 
-    for i_set, annotation_set in enumerate(maybe_tqdm(annotation_sets)):
+    for i_set, annotation_set in enumerate(
+        tqdm.tqdm(annotation_sets, total=len(annotation_sets), disable=not use_tqdm)
+    ):
         if i_set > n_error and (
             verbose >= 3
             or (verbose >= 1 and not use_tqdm and (i_set <= 5 or i_set % 100 == 0))

@@ -97,11 +97,8 @@ def download_images(
     df["key"] = utils.sanitize_filename_series(df["key"])
     df["url"] = df["url"].str.strip()
 
-    if verbose == 1 and use_tqdm:
-        maybe_tqdm = functools.partial(tqdm.tqdm, total=len(df))
-    else:
+    if verbose != 1:
         use_tqdm = False
-        maybe_tqdm = lambda x: x  # noqa: E731
 
     n_already_downloaded = 0
     n_download = 0
@@ -138,7 +135,9 @@ def download_images(
     t1 = time.time()
 
     is_valid = np.zeros(len(df), dtype=bool)
-    for i_row, (index, row) in enumerate(maybe_tqdm(df.iterrows())):
+    for i_row, (index, row) in enumerate(
+        tqdm.tqdm(df.iterrows(), total=len(df), disable=not use_tqdm)
+    ):
         if pd.isna(row["url"]) or row["url"] == "":
             n_error += 1
             if verbose >= 2:
@@ -401,14 +400,11 @@ def download_images_by_campaign(
                 )
             )
 
-    if verbose == 1 and use_tqdm:
-        using_tqdm = True
-        maybe_tqdm = tqdm.tqdm
-    else:
-        using_tqdm = False
-        maybe_tqdm = lambda x: x  # noqa: E731
+    using_tqdm = verbose == 1 and use_tqdm
 
-    for i_campaign, campaign in enumerate(maybe_tqdm(campaigns_to_process)):
+    for i_campaign, campaign in enumerate(
+        tqdm.tqdm(campaigns_to_process, disable=not using_tqdm)
+    ):
         if not n_proc:
             pass
 

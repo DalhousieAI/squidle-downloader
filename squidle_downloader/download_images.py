@@ -85,11 +85,8 @@ def download_images_from_dataframe(
     df["key"] = utils.sanitize_filename_series(df["key"])
     df["url"] = df["url"].str.strip()
 
-    if verbose == 1 and use_tqdm:
-        maybe_tqdm = functools.partial(tqdm.tqdm, total=len(df))
-    else:
+    if verbose != 1:
         use_tqdm = False
-        maybe_tqdm = lambda x: x  # noqa: E731
 
     n_already_downloaded = 0
     n_download = 0
@@ -98,7 +95,9 @@ def download_images_from_dataframe(
     t1 = time.time()
 
     is_valid = np.zeros(len(df), dtype=bool)
-    for i_row, (index, row) in enumerate(maybe_tqdm(df.iterrows())):
+    for i_row, (index, row) in enumerate(
+        tqdm.tqdm(df.iterrows(), total=len(df), disbale=not use_tqdm)
+    ):
         if pd.isna(row["url"]) or row["url"] == "":
             n_error += 1
             if verbose >= 2:

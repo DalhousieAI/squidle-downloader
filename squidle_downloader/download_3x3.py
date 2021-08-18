@@ -84,16 +84,11 @@ def download_dataset_3x3(df, data_dir, verbose=1):
     if verbose >= 1:
         print("Processing {} labels over {} images".format(len(df), len(url2idx)))
 
-    if verbose == 1:
-        maybe_tqdm = tqdm
-    else:
-        maybe_tqdm = lambda x: x  # noqa: E731
-
     skipped_points = defaultdict(lambda: 0)
     n_already_downloaded = 0
     n_download = 0
 
-    for i_url, (url, indices) in enumerate(maybe_tqdm(url2idx.items())):
+    for i_url, (url, indices) in enumerate(tqdm(url2idx.items(), disable=verbose != 1)):
 
         if verbose >= 2:
             print("{:4d}/{:4d}: {}".format(i_url, len(url2idx), url))
