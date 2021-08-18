@@ -92,7 +92,7 @@ def build_base_url(subdomain):
         SQUIDLE url with subdomain included.
     """
     if subdomain:
-        subdomain += "."
+        subdomain = subdomain + "."
     return "https://{}squidle.org".format(subdomain)
 
 
