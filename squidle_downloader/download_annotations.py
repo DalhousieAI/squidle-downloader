@@ -346,7 +346,7 @@ def get_parser():
         help="API token.",
     )
     parser.add_argument(
-        "--no-tqdm",
+        "--no-progress-bar",
         dest="use_tqdm",
         action="store_false",
         help="Disable tqdm progress bar.",
