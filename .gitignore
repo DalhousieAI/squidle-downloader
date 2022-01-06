@@ -5,6 +5,9 @@
 # LibreOffice lockfile
 .~*
 
+# Cached resource data
+cache
+
 
 ##---------------------------------------------------
 # Continuous Integration .gitignore files
