@@ -17,11 +17,29 @@ import tqdm
 from . import __meta__, utils
 
 COLUMNS = [
+    "comment",
+    "id",
+    "likelihood",
+    "needs_review",
+    "tag_names",
+    "updated_at",
+    "label.id",
+    "label.uuid",
     "label.name",
     "label.lineage_names",
-    "point.media.deployment.campaign.key",
+    "label.translated.id",
+    "label.translated.uuid",
+    "label.translated.name",
+    "label.translated.lineage_names",
+    "label.translated.translation_info",
     "point.media.deployment.key",
+    "point.media.deployment.id",
+    "point.media.deployment.name",
+    "point.media.deployment.campaign.key",
+    "point.media.deployment.campaign.id",
+    "point.media.deployment.campaign.name",
     "point.media.key",
+    "point.media.id",
     "point.media.path_best",
     "point.media.timestamp_start",
     "point.pose.data.temperature",
@@ -33,8 +51,12 @@ COLUMNS = [
     "point.pose.lat",
     "point.pose.lon",
     "point.pose.timestamp",
+    "point.data",
+    "point.id",
     "point.x",
     "point.y",
+    "point.t",
+    "user.username",
 ]
 
 
