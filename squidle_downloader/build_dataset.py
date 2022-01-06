@@ -433,7 +433,7 @@ def get_parser():
         "--verbose",
         "-v",
         action="count",
-        default=1,
+        default=2,
         help="""
             Increase the level of verbosity of the program. This can be
             specified multiple times, each will increase the amount of detail
