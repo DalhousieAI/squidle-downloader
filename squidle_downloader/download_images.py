@@ -244,7 +244,7 @@ def download_images_from_csv(
     verbose=1,
     i_proc=None,
     n_proc=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Download all images from a CSV file with contents in SQUIDLE format.
