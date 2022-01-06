@@ -93,7 +93,14 @@ def download_annotation_set(
         + colstr
         + '&f={"operations":[{"module":"pandas","method":"json_normalize"}]}'
         + '&q={"filters":[{"name":"label_id","op":"is_not_null"}]}'
+        + '&translate={"vocab_registry_keys":["worms","caab","catami"],"target_label_scheme_id":"1"}'
     )
+    # Translation targets
+    #    2 = CATAMI 1.4
+    # *  1 = SQUIDLE (extended version of CATAMI 1.4)
+    # * 11 = RLS Australian Coral Species List (extends RLS Catalogue, id=8)
+    #    3 = DFO Critters
+    #    4 = CBiCS
     url = endpoint + "/" + cmd
 
     ext = os.path.splitext(destination)[1]
