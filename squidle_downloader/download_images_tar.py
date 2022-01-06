@@ -319,7 +319,7 @@ def download_images_by_campaign(
     verbose=1,
     use_tqdm=True,
     print_indent=0,
-    **kwargs
+    **kwargs,
 ):
     """
     Download all images from a DataFrame into tarfiles, one for each campaign.
