@@ -166,10 +166,27 @@ def list_available_annotation_sets(api_token=None, verbose=1):
             )
         )
     try:
+        # Remove entries which:
+        # - are tagged as not real science
+        # - have "DO NOT USE" in the name
+        # - have "DO NOT USE" in the description
+        # - have "a copy of" in the description
+        # - have "supplement" in the description
+        filters = [
+            '{"or":[{"name":"is_real_science","op":"neq","val":"false"},{"name":"is_real_science","op":"is_null"}]}',
+            '{"or":[{"name":"name","op":"is_null"},{"not":{"name":"name","op":"like","val":"%DO NOT USE%"}}]}',
+            '{"or":[{"name":"description","op":"is_null"},{"not":{"name":"description","op":"like","val":"%DO NOT USE%"}}]}',
+            '{"or":[{"name":"description","op":"is_null"},{"not":{"name":"description","op":"like","val":"%a copy of%"}}]}',
+            '{"or":[{"name":"description","op":"is_null"},{"not":{"name":"description","op":"like","val":"%supplement%"}}]}',
+            # '{"name":"id","op":"not_in","val":[2171,9553,9553,10365,10436]}',  # no parents of children
+        ]
         response = requests.get(
             url,
             headers=headers,
-            params={"results_per_page": 20_000},
+            params={
+                "results_per_page": 20_000,
+                "q": '{"filters":[' + ",".join(filters) + "]}",
+            },
         )
     except requests.exceptions.RequestException as err:
         print("Error while handling: {}".format(url))
