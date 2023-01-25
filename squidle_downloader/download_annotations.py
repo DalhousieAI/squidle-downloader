@@ -79,7 +79,7 @@ def download_annotation_set(
         Verbosity level. Default is ``1``.
     print_indent : int, optional
         Amount of whitespace padding to precede print statements.
-        Default is `0`.
+        Default is ``0``.
     """
     padding = " " * print_indent
 
