@@ -392,6 +392,8 @@ def get_parser():
         help="""
             API token. You get your API token by logging in at
             https://squidle.org/ and clicking "API TOKEN" under "My Data".
+            If this is omitted, only publicly available annotation sets will be
+            downloaded.
         """,
     )
     parser.add_argument(
