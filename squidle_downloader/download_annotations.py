@@ -134,7 +134,7 @@ def download_annotation_set(
         )
 
 
-def list_available_annotation_sets(api_token=None, verbose=1):
+def list_available_annotation_sets(api_token=None, verbose=1, output_file=None):
     """
     Fetch ids of available annotation sets.
 
@@ -145,6 +145,8 @@ def list_available_annotation_sets(api_token=None, verbose=1):
         available.
     verbose : int, optional
         Verbosity level. Default is ``1``.
+    output_file : str, optional
+        Path to output file containing annotation set metadata.
 
     Returns
     -------
@@ -202,6 +204,8 @@ def list_available_annotation_sets(api_token=None, verbose=1):
             )
         return []
     df = pd.DataFrame.from_records(response.json()["objects"])
+    if output_file:
+        df.to_csv(output_file, index=False)
     ids = list(df["id"])
     if verbose >= 1:
         print(
@@ -241,7 +245,9 @@ def download_annotation_sets(
 
     if annotation_sets is None:
         annotation_sets = list_available_annotation_sets(
-            api_token=api_token, verbose=verbose
+            api_token=api_token,
+            verbose=verbose,
+            output_file=destination + "__metametadata.csv",
         )
 
     ext = os.path.splitext(destination)[1]
