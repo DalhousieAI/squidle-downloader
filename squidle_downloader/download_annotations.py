@@ -41,6 +41,7 @@ COLUMNS = [
     "point.media.key",
     "point.media.id",
     "point.media.path_best",
+    "point.media.path_best_thm",
     "point.media.timestamp_start",
     "point.pose.data.temperature",
     "point.pose.data.salinity",
