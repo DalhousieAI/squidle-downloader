@@ -290,7 +290,6 @@ def cached_download_paginated(
     def cached_dl_single(
         page, last_id=None, n_request=results_per_page, return_npage=False, _force=False
     ):
-
         params = {
             "q": {"order_by": [{"field": "id", "direction": "asc"}]},
             "results_per_page": n_request,
