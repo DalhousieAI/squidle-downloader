@@ -1,7 +1,8 @@
 # pre-commit workflow
 #
-# Ensures the codebase passes the pre-commit stack, to catch in case developers
-# don't have pre-commit set up locally.
+# Ensures the codebase passes the pre-commit stack.
+# We run this on GHA to catch issues in commits from contributors who haven't
+# set up pre-commit.
 
 name: pre-commit
 
@@ -11,6 +12,9 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-    - uses: pre-commit/action@v2.0.0
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+        cache: pip
+    - uses: pre-commit/action@v3.0.0
