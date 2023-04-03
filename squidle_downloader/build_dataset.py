@@ -89,7 +89,9 @@ def build_dataset(
 
     # Drop superfluous columns by selecting only the columns we care about
     # and rename columns as needed for merger
-    df_media = df_media[["id", "key", "path_best", "timestamp_start", "deployment_id"]]
+    df_media = df_media[
+        ["id", "key", "path_best", "path_best_thm", "timestamp_start", "deployment_id"]
+    ]
 
     if "media.id" not in df_pose.columns:
         # soi subdomain
@@ -126,6 +128,7 @@ def build_dataset(
     df.rename(
         columns={
             "path_best": "url",
+            "path_best_thm": "url_thumbnail",
             "timestamp_start": "timestamp",
             "alt": "altitude",
             "dep": "depth",
