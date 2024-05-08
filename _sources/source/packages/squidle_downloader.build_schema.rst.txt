@@ -1,0 +1,7 @@
+squidle\_downloader.build\_schema module
+========================================
+
+.. automodule:: squidle_downloader.build_schema
+   :members:
+   :undoc-members:
+   :show-inheritance:

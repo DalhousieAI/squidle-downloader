@@ -1,0 +1,7 @@
+squidle\_downloader.download\_annotations module
+================================================
+
+.. automodule:: squidle_downloader.download_annotations
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+squidle\_downloader.utils module
+================================
+
+.. automodule:: squidle_downloader.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:

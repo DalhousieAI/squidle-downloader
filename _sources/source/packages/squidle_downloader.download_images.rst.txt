@@ -1,0 +1,7 @@
+squidle\_downloader.download\_images module
+===========================================
+
+.. automodule:: squidle_downloader.download_images
+   :members:
+   :undoc-members:
+   :show-inheritance:

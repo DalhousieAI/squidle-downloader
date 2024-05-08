@@ -1,0 +1,7 @@
+squidle\_downloader.download\_3x3 module
+========================================
+
+.. automodule:: squidle_downloader.download_3x3
+   :members:
+   :undoc-members:
+   :show-inheritance:

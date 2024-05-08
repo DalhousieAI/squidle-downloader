@@ -1,0 +1,23 @@
+squidle\_downloader package
+===========================
+
+.. automodule:: squidle_downloader
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   squidle_downloader.build_dataset
+   squidle_downloader.build_schema
+   squidle_downloader.download_3x3
+   squidle_downloader.download_annotations
+   squidle_downloader.download_images
+   squidle_downloader.download_images_tar
+   squidle_downloader.download_resource
+   squidle_downloader.path
+   squidle_downloader.utils

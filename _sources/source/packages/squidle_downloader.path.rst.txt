@@ -1,0 +1,7 @@
+squidle\_downloader.path module
+===============================
+
+.. automodule:: squidle_downloader.path
+   :members:
+   :undoc-members:
+   :show-inheritance:

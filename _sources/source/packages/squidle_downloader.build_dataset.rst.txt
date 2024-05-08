@@ -1,0 +1,7 @@
+squidle\_downloader.build\_dataset module
+=========================================
+
+.. automodule:: squidle_downloader.build_dataset
+   :members:
+   :undoc-members:
+   :show-inheritance:
